@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppCommonMapper">
+   <!-- 保存上传文件 -->
+   <insert id="saveEfiles" parameterType="pd">
+       insert  into E_FILES (
+        FILE_ID,
+		FILE_NAME,
+		FILE_TYPE,
+<!-- 		FILE_SIZE, -->
+		URL,
+		UP_DATE,
+		UP_USER,
+		<if test=" object_id !=null and   object_id !='' ">
+		OBJECT_ID,
+		</if>
+		USE_TYPE,
+		USE_DETIAL_TYPE
+       )values(
+          #{file_id},
+          #{file_name},
+          #{file_type},
+<!--           #{file_size}, -->
+          #{file_path},
+          now(),
+          #{user_id},
+        <if test=" object_id !=null and   object_id !='' ">
+		  #{object_id},
+		</if>
+          #{use_type},
+          #{use_detail_type}
+       )
+   
+   </insert>
+  
+   <!-- 获取品牌车型 -->
+   <select id="getEautoMat"  parameterType="pd" resultType="pd">
+      SELECT ea.* FROM e_auto_mat  ea  where  1=1 
+      <!-- <if test="model_flag =1 ">
+      </if>
+      <choose>
+          <when test="model_flag =1">
+           and ea.PARENT_ID=0 
+          </when>
+          <otherwise>
+           and ea.PARENT_ID !=0 
+          </otherwise>
+      </choose> -->
+      <if test=" level !=null and level !='' ">
+      and ea.level =#{level}
+      </if>
+      <if test="parent_id !=null and parent !='' ">
+        and ea.parent_id=#{parent_id}
+      </if>
+   </select>
+   <!-- 修改附件的业务主键 -->
+   <update id="updateEfilesByFileId" parameterType="pd">
+      update  E_FILES  e  set e.OBJECT_ID=#{object_id}  where e.FILE_ID = #{file_id}
+   </update>
+   <!-- 修改文件状态 -->
+   <update id="updateEfilesStatusByfileId" parameterType="pd">
+    update  E_FILES  e  set e.FILE_STATUS=#{file_status}  where e.FILE_ID = #{file_id}
+   </update>
+   <!-- 修改文件状态(用户头像) -->
+   <update id="updateEfilesStatusByUserId" parameterType="pd">
+    update  E_FILES  e  set e.FILE_STATUS=#{file_status}  where e.OBJECT_ID = #{user_id}  and e.use_type=10181006
+   </update>
+	
+	<!-- 根据起始目的城市id查询匹配的司机 -->
+	<select id="getElineBySrcCityIdAndDesCityId" parameterType="pd" resultType="pd">
+	   select  u.USER_NAME,u.TEL,e.SRC_CITY,e.DES_CITY  
+	   from e_line e  inner join E_VEHICLE  ev on  ev.VEHICLE_ID=e.VEHICLE_ID 
+	   inner join E_USER_VEHICLE  eu on  eu.VEHICLE_ID=ev.VEHICLE_ID
+	   inner  join  sys_user u on   u.user_id=eu.user_id
+	   where u.status=10021001
+	  		and ((e.SRC_CITY_ID=#{src_city_id} and e.DES_CITY_ID=#{des_city_id})  
+	   		or
+	   		(e.SRC_CITY_ID=#{des_city_id} and e.DES_CITY_ID=#{src_city_id}))
+ 	</select>
+	
+	<insert id="saveMaMsg" parameterType="pd" >
+	   insert into  ma_msg(
+	        MSG_ID,
+			MSG_TYPE,
+			MSG_TITLE,
+			MSG_CONTENT,
+			<if test=" msg_file !=null and msg_file !=''">
+			MSG_FILE,
+			</if>
+			SEND_TIME,
+			END_TIME,
+			SEND_USER,
+			SEND_NAME,
+			<if test="msgUserType   != null and msgUserType   != ''">
+				USER_TYPE,
+			</if>
+			RANGE_FLAG
+	   )values(
+	        #{msg_id},
+			#{msg_type},
+			getSysData(#{msg_type}),
+			#{msg_content},
+			<if test=" msg_file !=null and msg_file !=''">
+			#{msg_file},
+			</if>
+			#{send_time},
+			#{end_time},
+			#{send_user},
+			getSysUserNameByUserId(#{send_user}),
+			<if test="msgUserType   != null and msgUserType   != ''">
+				#{msgUserType},
+			</if>
+			#{range_flag}
+	   )
+	</insert>
+	<!-- 保存消息接收人 -->
+	<insert id="saveMaMsgReceive" parameterType="pd">
+	     insert into MA_MSG_RECEIVE
+	     (
+	        MSG_RECEIVE_ID,
+			MSG_ID,
+			USER_ID,
+			USER_NAME,
+			RECEIVE_TIME,
+			MSG_CONTENT
+	      )values
+	      <foreach collection="user_id" separator="," item="u_id">
+	        (getPrimary(),
+	         #{msg_id},
+	         getSysUserIdByPhone(#{u_id}),
+	         #{u_id},
+	         now(),
+	         #{msgContent}
+	         )
+	      </foreach>
+	</insert>
+	
+	<select id="getUserMsgAndTypeByTelPhone" parameterType="pd" resultType="pd">
+		select 
+			u.USER_ID,u.`NAME`,u.USER_TYPE
+		from sys_user u where u.USER_NAME=TRIM(#{thisTel})
+		limit 0,1
+	</select>
+	
+	<select id="getBussniesStatusById" parameterType="pd" resultType="pd">
+		select `STATUS` from e_order where ORDER_ID=#{objectId}
+	</select>
+	
+</mapper>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MenuMapper">
+
+	<resultMap type="Menu" id="menuResultMap">
+		<id column="MENU_ID" property="MENU_ID"/>
+		<result column="MENU_NAME" property="MENU_NAME"/>
+		<result column="MENU_URL" property="MENU_URL"/>
+		<result column="PARENT_ID" property="PARENT_ID"/>
+		<result column="MENU_ORDER" property="MENU_ORDER"/>
+		<result column="MENU_ICON" property="MENU_ICON"/>
+		<result column="MENU_TYPE" property="MENU_TYPE"/>
+	</resultMap>
+	
+	<!-- ztree -->
+	<resultMap type="Menu" id="menuZtreeResultMap">
+	<id column="MENU_ID" property="MENU_ID"/>
+	<result column="MENU_NAME" property="MENU_NAME"/>
+	<result column="MENU_URL" property="MENU_URL"/>
+	<result column="PARENT_ID" property="PARENT_ID"/>
+	<result column="MENU_ORDER" property="MENU_ORDER"/>
+	<result column="MENU_ICON" property="MENU_ICON"/>
+	<result column="MENU_TYPE" property="MENU_TYPE"/>
+	<result column="target" property="target"></result>
+</resultMap>
+
+
+	<!-- 根据职位ID获取菜单LIST  -->
+	<select id="getMenuListByPostId" parameterType="java.lang.Long" resultType="com.fh.entity.system.Menu">
+		select distinct sm.MENU_ID,sm.MENU_NAME,sm.NEMU_URL,sm.MENU_ICON
+		from sys_post_role pr ,sys_role_menu rm,sys_menu sm
+		where pr.ROLE_ID=rm.ROLE_ID and rm.MENU_ID=sm.MENU_ID
+		and pr.POST_ID=#{postPar}
+		and sm.MENU_STATUS=10021001
+		and sm.MENU_LEVEL=1
+		order by sm.menu_orderby
+	</select>
+	
+	<!-- 根据菜单ID获取菜单LIST  -->
+	<select id="getMenuListByMenuId"  parameterType="pd"  resultType="com.fh.entity.system.Menu">
+		select distinct sm.MENU_ID,sm.MENU_NAME,sm.NEMU_URL,sm.MENU_ICON
+		from sys_post_role pr ,sys_role_menu rm,sys_menu sm
+		where pr.ROLE_ID=rm.ROLE_ID and rm.MENU_ID=sm.MENU_ID
+		and pr.POST_ID=#{postId}
+		and sm.MENU_STATUS=10021001
+		and sm.MENU_LEVEL=2
+		and sm.PARENT_MENU_ID=#{menuId}
+		order by sm.menu_orderby
+	</select>
+	
+	<!-- 根据菜单ID和用户名获取按钮权限LIST  -->
+	<select id="getButtonListByMenuId"  parameterType="pd"  resultType="com.fh.entity.system.Button">
+		select distinct sb.BUT_ID,sb.BUT_NAME,sb.BUT_CODE,sb.BUT_VALUE,sb.BUT_SORT
+		from sys_post_role pr ,sys_role_menu rm,sys_button_show bs,sys_button sb
+		where pr.ROLE_ID=rm.ROLE_ID and rm.MENU_ID=bs.menu_id  
+		and pr.ROLE_ID=bs.ROLE_ID
+		and bs.BUT_ID=sb.BUT_ID
+		and pr.POST_ID=#{postId}
+		and rm.MENU_ID=#{menuSmall}	
+	</select>
+	
+	<!-- 根据职位ID获取职位信息 -->
+	<select id="getPostByPostId" parameterType="java.lang.Long" resultType="pd">
+		SELECT
+			p.POST_TYPE,
+			p.POST_NAME,
+			p.ORG_ID as  ORG_CODE,
+			case when o.ORG_LEVEL is null then -1 else o.ORG_LEVEL END ORG_LEVEL
+		FROM
+			sys_post p left join base_org o on p.org_id=o.org_id
+		WHERE  p.post_status = 10021001
+		AND p.post_id = #{postId}
+	</select>
+
+	<select id="findMaxId" parameterType="pd" resultType="pd">
+		select MAX(MENU_ID) MID FROM SYS_MENU
+	</select>
+	
+	<select id="listAllParentMenu" resultMap="menuResultMap">
+		select * from SYS_MENU 
+		where PARENT_ID = '0' order by MENU_ORDER 
+	</select>
+	
+	<select id="listSubMenuByParentId" parameterType="String" resultMap="menuResultMap">
+		select  * from SYS_MENU
+		where PARENT_ID = #{parentId} order by MENU_ORDER 
+	</select>
+		
+	<select id="getMenuById" parameterType="pd" resultType="pd">
+		select  MENU_ID,
+		 		MENU_NAME,
+		 		MENU_URL,
+		 		PARENT_ID,
+		 		MENU_ORDER,
+		 		MENU_TYPE
+		 from SYS_MENU 
+		 where MENU_ID=#{MENU_ID}
+	</select>
+	
+	
+	<insert id="insertMenu" parameterType="Menu">
+		insert into SYS_MENU (
+			MENU_ID,
+			MENU_NAME,
+			MENU_URL,
+			PARENT_ID,
+			MENU_ORDER,
+			MENU_TYPE
+		) values (
+			#{MENU_ID},
+			#{MENU_NAME},
+			#{MENU_URL},
+			#{PARENT_ID},
+			#{MENU_ORDER},
+			#{MENU_TYPE}
+		)
+	</insert>
+	
+	<update id="updateMenu" parameterType="Menu">
+		update SYS_MENU set 
+			MENU_NAME =#{MENU_NAME},
+			MENU_URL  =#{MENU_URL} ,
+			PARENT_ID =#{PARENT_ID},
+			MENU_ORDER=#{MENU_ORDER},
+			MENU_TYPE =#{MENU_TYPE}
+		where 
+			MENU_ID=#{MENU_ID}
+	</update>
+	
+	<update id="editicon" parameterType="Menu">
+		update SYS_MENU set 
+			MENU_ICON=#{MENU_ICON}
+		where MENU_ID=#{MENU_ID}
+	</update>
+	
+	<update id="editType" parameterType="Menu">
+		update SYS_MENU set 
+			MENU_TYPE=#{MENU_TYPE}
+		where PARENT_ID=#{MENU_ID}
+	</update>
+	
+	<delete id="deleteMenuById" parameterType="java.lang.Long">
+		delete from SYS_MENU 
+		where MENU_ID=#{MENU_ID} 
+		or PARENT_ID=#{MENU_ID}
+	</delete>
+</mapper>

@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RoleMapper">
+	
+	<resultMap type="Role" id="roleResultMap">
+		<id column="ROLE_ID" property="ROLE_ID"/>
+		<result column="ROLE_NAME" property="ROLE_NAME"/>
+		<result column="RIGHTS" property="RIGHTS"/>
+	</resultMap>
+	
+	<!-- 查询角色列表 -->
+	<select id="getRolelistPage" parameterType="page" resultType="pd">
+		SELECT
+			R.ROLE_ID,
+			R.ROLE_NAME,
+			R.ROLE_TYPE,
+			R.ROLE_STATUS,
+			U.NAME CREATE_BY,
+			DATE_FORMAT(R.CREATE_DATE,'%Y-%c-%d %h:%i:%s') CREATE_DATE,
+			o.ORG_NAME,
+			d.DEALER_NAME
+		FROM
+			SYS_ROLE r LEFT JOIN sys_user u on r.create_by=u.user_name 
+		LEFT JOIN base_dealer d on r.ORG_ID=d.DEALER_ID
+		LEFT JOIN base_org o on r.ORG_ID=o.ORG_ID
+		where 1=1
+		<!-- r.role_status = 10021001 -->
+		<if test="pd.roleType != null and pd.roleType != ''">
+			AND r.role_type = #{pd.roleType}
+		</if>
+		<if test="pd.orgType == 10120002">
+			and r.org_id=#{pd.dealerId}
+		</if>
+		<if test="pd.roleName != null and pd.roleName != ''">
+			AND r.role_name like CONCAT(CONCAT('%',#{pd.roleName}),'%')
+		</if> 
+		order by r.CREATE_DATE desc
+	</select>
+	
+	<!-- 查询一级菜单 -->
+	<select id="getMenuList" parameterType="pd" resultType="com.fh.entity.system.Menu">
+		select  MENU_ID,MENU_NAME,MENU_STATUS,MENU_TYPE,
+		MENU_ORDERBY,NEMU_URL,CREATE_BY,CREATE_DATE
+		from sys_menu where menu_level=1  and menu_status=10021001
+		<if test="roleTypeVal != null and roleTypeVal != ''">
+			and menu_type in(#{roleTypeVal},10120003)
+		</if> 
+		ORDER BY menu_orderby
+	</select>
+	
+	<!-- 查询一级菜单 -->
+	<select id="getEditeMenuList" parameterType="pd" resultType="com.fh.entity.system.Menu">
+			SELECT distinct
+				m.MENU_ID,
+				m.MENU_NAME,
+				m.MENU_STATUS,
+				m.MENU_TYPE,
+				m.MENU_ORDERBY,
+				m.NEMU_URL,
+				m.CREATE_BY,
+				m.CREATE_DATE,
+			   case when r.menu_id is null then false else true end hasMenu
+			FROM
+				sys_menu m
+			LEFT JOIN (
+				SELECT
+					menu_id
+				FROM
+					sys_role_menu
+				WHERE
+					role_id = #{roleIdSing}
+			) r ON m.MENU_ID = r.menu_id
+			WHERE m.menu_level = 1
+			AND m.menu_status = 10021001
+			<if test="roleTypeVal != null and roleTypeVal != ''">
+				and m.menu_type in(#{roleTypeVal},10120003)
+			</if> 
+			ORDER BY m.menu_orderby	
+	</select>
+	
+	<!-- 根据父级ID获取二级菜单 -->
+	<select id="getMenuListSmall" parameterType="pd"  resultType="com.fh.entity.system.Menu">
+		select MENU_ID,MENU_NAME,MENU_STATUS,MENU_TYPE,
+			MENU_ORDERBY,NEMU_URL,CREATE_BY,CREATE_DATE
+		from sys_menu where  menu_status=10021001  
+		<if test="roleTypeVal != null and roleTypeVal != ''">
+			and menu_type  in(#{roleTypeVal},10120003)
+		</if> 
+		<if test="menuId != null and menuId != ''">
+			and parent_menu_id=#{menuId}
+		</if> 
+		ORDER BY menu_orderby
+	</select>
+	
+	<!-- 修改根据父级ID获取二级菜单 -->
+	<select id="getEditeMenuListSmall" parameterType="pd"  resultType="com.fh.entity.system.Menu">
+		SELECT distinct 
+				m.MENU_ID,
+				m.MENU_NAME,
+				m.MENU_STATUS,
+				m.MENU_TYPE,
+				m.MENU_ORDERBY,
+				m.NEMU_URL,
+				m.CREATE_BY,
+				m.CREATE_DATE,
+			   case when r.menu_id is null then false else true end hasMenu
+			FROM
+				sys_menu m
+			LEFT JOIN (
+				SELECT
+					menu_id
+				FROM
+					sys_role_menu
+				WHERE
+					role_id = #{roleIdSing}
+			) r ON m.MENU_ID = r.menu_id
+			WHERE  m.menu_status = 10021001
+			<if test="roleTypeVal != null and roleTypeVal != ''">
+				and m.menu_type  in(#{roleTypeVal},10120003)
+			</if> 
+			<if test="menuId != null and menuId != ''">
+				and m.parent_menu_id=#{menuId}
+			</if> 
+			ORDER BY m.menu_orderby	
+	</select>
+	
+	<!-- 获取按钮 -->
+	<select id="getButtonList" parameterType="pd"  resultType="com.fh.entity.system.Button">
+		SELECT
+			m.BUT_ID,b.BUT_NAME
+		FROM
+			SYS_BUTTON_MENU m ,sys_button b
+		where m.but_id=b.but_id
+		and m.menu_id=#{menuId}
+		<choose>
+			<when test="roleTypeVal == 10120001">
+				and m.BUT_TYPE in(10120001,10120003) 
+			</when>
+			<otherwise>
+				and m.BUT_TYPE in(10120002,10120003) 
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 修改获取按钮 -->
+	<select id="getEditeButtonList" parameterType="pd"  resultType="com.fh.entity.system.Button">
+		SELECT
+			distinct m.BUT_ID,b.BUT_NAME,
+		CASE
+				WHEN sbs.BUT_ID IS NULL THEN
+					FALSE
+				ELSE
+					TRUE
+				END hasButton
+		FROM
+			SYS_BUTTON_MENU m  inner join sys_button b on m.but_id=b.but_id
+		left join (
+				SELECT but_id
+					FROM
+						SYS_BUTTON_SHOW
+					WHERE
+						menu_id = #{menuId}
+					AND role_id =#{roleIdSing}
+		) sbs on b.but_id=sbs.but_id
+		where m.menu_id=#{menuId}
+		<choose>
+			<when test="roleTypeVal == 10120001">
+				and m.BUT_TYPE in(10120001,10120003) 
+			</when>
+			<otherwise>
+				and m.BUT_TYPE in(10120002,10120003) 
+			</otherwise>
+		</choose>
+		
+	</select>
+	
+	<!-- 添加角色记录 -->
+	<insert id="insertRoles" parameterType="Role">
+		insert into SYS_ROLE(
+			ROLE_ID,	
+			ROLE_NAME,	
+			ROLE_TYPE,	
+			ROLE_STATUS,	
+			ORG_ID,
+			CREATE_BY,	
+			CREATE_DATE
+		) values (
+			#{ROLE_ID},	
+			#{ROLE_NAME},	
+			#{ROLE_TYPE},	
+			#{ROLE_STATUS},	
+			#{orgId},
+			#{CREATE_BY},	
+			now()
+		)
+	</insert>
+	
+	<!-- 修改角色记录 -->
+	<update id="updateRoleMsg" parameterType="Role">
+		update  SYS_ROLE
+			set 
+				ROLE_NAME = #{ROLE_NAME},
+				ROLE_STATUS=#{ROLE_STATUS},
+				ORG_ID=#{orgId},
+				UPDATE_BY = #{UPDATE_BY},
+				UPDATE_DATE = #{UPDATE_DATE}
+			where 
+				ROLE_ID = #{ROLE_ID}	
+	</update>
+	
+	<!-- 添加菜单角色权限 -->
+	<insert id="insertRoleMenu" parameterType="pd">
+		 insert into  SYS_ROLE_MENU(
+		 	ROLE_MENU_ID,
+		 	MENU_ID,
+		 	ROLE_ID,
+		 	CREATE_BY,
+		 	CREATE_DATE
+		 ) values(
+		 	#{roleMenuId},
+		 	#{menuId},
+		 	#{rolId},
+		 	#{createBy},
+		 	#{createDate}
+		 )
+	</insert>
+	
+	<!-- 删除对应角色的菜单记录 -->
+	<delete id="deleteRoleByIdAneMenu" parameterType="pd">
+		DELETE  from SYS_ROLE_MENU where  role_id=#{rolId}
+	</delete>
+	
+	<!-- 删除对应角色的按钮记录 -->
+	<delete id="deleteButtonByIdAndMenu" parameterType="pd">
+		DELETE  from SYS_BUTTON_SHOW  where  role_id=#{rolId}
+	</delete>
+	
+	<!-- 插入菜单的按钮权限 -->
+	<insert id="insertMenuButton" parameterType="pd">
+	 insert into  SYS_BUTTON_SHOW(
+	 	BUT_BUTTON_ID,
+	 	BUT_ID,
+	 	MENU_ID,
+	 	ROLE_ID,
+	 	CREATE_BY,
+	 	CREATE_DATE
+	 ) values(
+	 	#{buttMenuId},
+	 	#{butMenuId},
+	 	#{muBuId},
+	 	#{rolId},
+	 	#{createBy},
+	 	#{createDate}
+	 )
+	</insert>
+	
+	<!-- 获取对应的角色信息根据角色Id -->
+	<select id="getRoleMap" parameterType="pd"  resultType="pd">
+		select 
+			r.ROLE_ID,	
+			r.ROLE_NAME,	
+			r.ROLE_TYPE,	
+			r.ROLE_STATUS,	
+			r.CREATE_BY,	
+			DATE_FORMAT(r.CREATE_DATE,'%Y-%c-%d') CREATE_DATE,
+			U.NAME CREATE_USER,
+			d.DEALER_ID,
+			d.DEALER_NAME
+		from SYS_ROLE  r INNER JOIN sys_user u on r.CREATE_BY=u.user_name
+		left join base_dealer d on r.ORG_ID=d.DEALER_ID
+		where r.ROLE_ID=#{singleRoleId}
+	</select>
+	
+	<!-- 查询职位列表 -->
+	<select id="getPostlistPage" parameterType="page" resultType="pd">
+		SELECT
+			P.POST_ID,
+			P.POST_NAME,
+			P.POST_TYPE,
+			P.POST_STATUS,
+			DATE_FORMAT(P.CREATE_DATE, '%Y-%c-%d %h:%i:%s') CREATE_DATE,
+			U. NAME  CREATE_BY,
+			0 CHECKED,
+			case when O.ORG_NAME is null then bd.dealer_name else O.ORG_NAME end ORG_NAME
+		FROM
+			sys_post p left join  sys_user u on p.create_by = u.user_id 
+			left join base_org o on p.org_id = o.org_id
+			left join base_dealer bd on p.org_id = bd.dealer_id
+		WHERE 1=1
+		<if test="pd.postName != null and pd.postName != ''">
+			and p.post_name  like CONCAT(CONCAT('%',#{pd.postName}),'%')
+		</if>
+		<if test="pd.postType != null and pd.postType != ''">
+			and p.POST_TYPE=#{pd.postType}
+		</if>
+		<if test="pd.orgCode != null and pd.orgCode != ''">
+			and p.org_id=#{pd.orgCode}
+		</if>
+		<if test="pd.dealerId != null and pd.dealerId != ''">
+			and p.org_id=#{pd.dealerId}
+		</if>
+		order by p.create_date desc
+	</select>
+	
+	<!-- 查询职位列表(修改) -->
+	<select id="getPostListEditelistPage" parameterType="page" resultType="pd">
+		SELECT
+			P.POST_ID,
+			P.POST_NAME,
+			P.POST_TYPE,
+			DATE_FORMAT(P.CREATE_DATE, '%Y-%c-%d') CREATE_DATE,
+			U. NAME  CREATE_BY,
+			case when O.ORG_NAME is null then bd.dealer_name else O.ORG_NAME end ORG_NAME,
+			case when k.post_id is null then  'no' else 'yes' end ISHAS
+		FROM
+			sys_post p left join  sys_user u on p.create_by = u.user_name 
+			left join base_org o on p.org_id = o.org_id
+			left join base_dealer bd on p.org_id = bd.dealer_id
+			left join (
+				select DISTINCT u.user_id,s.post_id
+				from  sys_user u,sys_user_post s 
+				where u.user_id=s.user_id and u.user_id=#{pd.userId}
+		) k on p.post_id=k.post_id
+		WHERE
+		 p.post_status = 10021001
+		<if test="pd.postName != null and pd.postName != ''">
+			and p.post_name  like CONCAT(CONCAT('%',#{pd.postName}),'%')
+		</if>
+		<if test="pd.postType != null and pd.postType != ''">
+			and p.POST_TYPE=#{pd.postType}
+		</if>
+		<if test="pd.orgCode != null and pd.orgCode != ''">
+			and p.org_id=#{pd.orgCode}
+		</if>
+	</select>
+	
+	<!-- 获取机构第一级 -->
+	<select id="getOrgFirstList"  resultType="com.fh.entity.system.OrgEntry">
+		select ORG_ID,ORG_NAME,PARENT_ORG_ID from base_org
+		<!-- where org_level=0 -->
+	</select>
+	
+	<!-- 获取机构第二级 -->
+	<select id="getOrgSecondList"  parameterType="pd" resultType="com.fh.entity.system.OrgEntry">
+		select ORG_ID,ORG_NAME,PARENT_ORG_ID from base_org where parent_org_id=#{orgId}
+	</select>
+	
+	<!-- 获取角色list -->
+	<select id="getRoleDetillistPage" parameterType="page" resultType="pd">
+		SELECT
+			R.ROLE_ID,
+			R.ROLE_NAME,
+			D.DATA_NAME ROLE_TYPE,
+			U. NAME,
+			DATE_FORMAT(r.create_date, '%Y-%c-%d') CREATE_DATE,
+			'no' IS_CHECK
+		FROM
+			sys_role r,
+			sys_user u,
+			sys_data d
+		WHERE
+			r.CREATE_by = u.user_name
+		AND r.role_type = d.data_key
+		AND r.role_type = #{pd.roleDetailId}
+		AND r.role_status = 10021001	
+		<if test="pd.orgType == 10120002">
+			and r.ORG_ID = #{pd.orgId}
+		</if>
+		<if test="pd.roleName != null and pd.roleName != ''">
+			and r.ROLE_NAME like concat('%',#{pd.roleName},'%')   
+		</if>
+	</select>
+	
+	<!-- 新增职位 -->
+	<insert id="insertPosts" parameterType="Post">
+		insert into SYS_POST(
+			POST_ID,	
+			POST_NAME,	
+			POST_TYPE,	
+			POST_STATUS,	
+			ORG_ID,	
+			CREATE_BY,	
+			CREATE_DATE
+		) values (
+			#{POST_ID},	
+			#{POST_NAME},	
+			#{POST_TYPE},	
+			#{POST_STATUS},	
+			#{ORG_ID},	
+			#{CREATE_BY},	
+			#{CREATE_DATE}
+		)
+	</insert>
+	
+	<!-- 新增角色与职位的关联表 -->
+	<insert id="insertPostRoleTb" parameterType="pd">
+		insert into SYS_POST_ROLE(
+			POST_ROLE_ID,
+			ROLE_ID,
+			POST_ID,
+			CREATE_BY,
+			CREATE_DATE
+		) values (
+			#{postRoleId},
+			#{roleId},
+			#{postId},
+			#{createBy},
+			#{createTime}
+		)
+	</insert>
+	
+	<!-- 查询职位信息 -->
+	<select id="getPostMsg" parameterType="pd" resultType="pd">
+		SELECT
+			P.POST_ID,
+			P.POST_NAME,
+			P.POST_TYPE,
+			P.ORG_ID,
+			p.POST_STATUS,
+			concat_ws('',o.org_name,bd.dealer_name) PLACE_NAME
+		FROM
+			sys_post p
+		LEFT JOIN base_org o ON p.org_id = o.org_id
+		LEFT JOIN base_dealer bd ON p.org_id = bd.dealer_id	
+		where p.post_id=#{postMsgId}
+	</select>
+	
+	<!-- 根据职位ID获取角色列表 -->
+	<select id="getRoleListByPost" parameterType="pd" resultType="pd">
+		SELECT
+			P.ROLE_ID,
+			R.ROLE_NAME,
+			U. NAME,
+			DATE_FORMAT(r.create_date, '%Y-%c-%d') CREATE_DATE,
+			r.ROLE_TYPE
+		FROM
+			sys_post_role p,
+			sys_role r,
+			sys_user u
+		WHERE
+			p.role_id = r.role_id
+		AND r.create_by = u.user_name
+		AND p.post_id = #{postMsgId}
+	</select>
+	
+	<!-- 修改职位-->
+	<update id="updatePosts" parameterType="Post">
+		update SYS_POST set
+			POST_NAME=#{POST_NAME},
+			POST_TYPE=#{POST_TYPE},
+			POST_STATUS=#{POST_STATUS},
+			ORG_ID=#{ORG_ID},
+			UPDATE_BY=#{UPDATE_BY},
+			UPDATE_DATE=#{UPDATE_DATE}
+		where POST_ID=#{POST_ID}
+	</update>
+	
+	<!-- 删除职位与角色的对应记录 -->
+	<delete id="delterPostRoleMsg" parameterType="pd">
+		delete from sys_post_role where post_id=#{postid}
+	</delete>
+	
+	<!-- 查询用户列表 -->
+	<select id="getUserlistPage" parameterType="page" resultType="pd">
+		SELECT
+			A.USER_ID,
+			A.USER_NAME,
+			A. PASSWORD,
+			A. NAME,
+			D.DATA_NAME SEX,
+			S.DATA_NAME STATUS_NAME,
+			A.TEL,
+			A. STATUS,
+			A.CREATE_BY,
+			PJ.ORG_NAME,
+			PJ.POST_NAME,
+			DATE_FORMAT(a.CREATE_DATE, '%y-%c-%d') CREATE_DATE
+		FROM
+			SYS_USER a
+		INNER JOIN sys_data d ON a.sex = d.data_key
+		INNER JOIN sys_data s ON a. STATUS = s.data_key
+		LEFT JOIN (
+			SELECT
+				GROUP_CONCAT(
+					CONCAT_WS(
+						',',
+						bo.org_name,
+						ds.dealer_name
+					)
+				) org_name,
+				sup.user_id,
+				ds.DEALER_ID,
+				queryChildrenAreaInfo(#{pd.org_id}) ORG_STR,
+				GROUP_CONCAT(p.post_name) post_name
+			FROM
+				sys_user_post sup
+			INNER JOIN sys_post p ON sup.post_id = p.post_id
+			LEFT JOIN base_dealer ds ON p.org_id = ds.dealer_id
+			LEFT JOIN base_org bo ON p.org_id = bo.org_id
+			WHERE
+				p.post_status = 10021001
+			GROUP BY
+				sup.user_id
+		) pj ON a.user_id = pj.user_id
+		WHERE a. STATUS = 10021001
+		<if test="pd.loginName != null and pd.loginName != ''">
+			and a.user_name LIKE CONCAT('%',#{pd.loginName},'%')
+		</if>
+		<if test="pd.chineName != null and pd.chineName != ''">
+			and a.name LIKE CONCAT('%',#{pd.chineName},'%')
+		</if>
+		<choose>
+			<when test="pd.sta == 10120002">
+				<if test="pd.org_id != null and pd.org_id != ''">
+					and FIND_IN_SET(#{pd.org_id},pj.DEALER_ID)
+				</if>
+			</when>
+			<otherwise>
+				<if test="pd.org_id != null and pd.org_id != ''">
+					and FIND_IN_SET(#{pd.org_id},pj.ORG_STR)
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	
+</mapper>

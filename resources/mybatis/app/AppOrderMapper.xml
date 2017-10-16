@@ -1,0 +1,1697 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppOrderMapper">
+   <!-- 查询配货大厅 -->
+   <select id="getSupplyGoodsCorelistPage" parameterType="page" resultType="pd">
+      select  
+        e.ORDER_ID,
+		e.STATUS,
+		e.USER_ID,
+		e.ORDER_FLAG,
+		e.ADD_TIME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y/%m/%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y/%m/%d') END_DATE,
+<!-- 		e.BEGIN_DATE, -->
+<!-- 		e.END_DATE, -->
+		e.B_ADDID,
+		e.B_CITY_NAME,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_ADDID,
+		e.E_CITY_NAME,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.ISTAKE,
+		e.ISTOOK,
+		e.VEHICLE_ID,
+		e.OWNER_ID,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_NAME,
+		getBrandByModleId(e.MODLE_ID) BRAND_NAME,
+		e.MODLE_CODE,
+		e.MODLE_ID,
+		e.MODLE_NAME,
+		e.NUMBER,
+		e.DES,
+		e.INVOICE_ID,
+		e.COM_ID,
+		e.PRICE,
+		e.DEPOSIT,
+		e.PAYMENT_TIME,
+		e.PAYMENT_FLAG,
+		e.SEL_DATE,
+		e.COM_NAME,
+		e.DRIVER_ID,
+		e.DRIVER_NAME,
+		e.DRIVER_PHONE,
+		e.SEND_TIME,
+		e.ARRIVE_TIME,
+		e.HAND_TIME,
+		e.GET_TIME,
+		DATE_FORMAT(e.PUBLISH_DATE,'%m-%d %H:%i') PUBLISH_DATE,
+<!-- 		e.PUBLISH_DATE, -->
+		e.REVOKE_DATE,
+		e.COMPLETE_DTAE,
+		e.DIRECT_PRICE,
+		e.IS_TAX,
+		e.VIN,
+		e.CAR_NO,
+		e.IS_REPEAT,
+		e.REPEAT_DATE
+        from  E_ORDER   e   
+      where 
+      e.ORDER_FLAG=#{pd.order_flag}  <!-- 是否是订单 -->
+    <!-- 已经报价的不再显示 -->  
+      and  not exists (select ee.order_id  from E_ORDER_PRICE ee where 
+      ee.ORDER_ID=e.ORDER_ID  and ee.driver_id=#{pd.user_id} )
+    
+      and  e.status = #{pd.status}     <!-- 订单状态 -->
+       <!-- 起运城市 -->
+      <if test=" pd.b_city_id !=null and pd.b_city_id !='' ">
+        and e.b_city_id =#{pd.b_city_id}
+      </if>
+      <!-- 到达城市 -->
+      <if test=" pd.e_city_id !=null and pd.e_city_id !='' ">
+        and e.e_city_id =#{pd.e_city_id}
+      </if>
+      <!-- 发货时间 -->
+      <if test=" pd.b_begin_date !=null and pd.b_begin_date !='' ">
+        and e.begin_date <![CDATA[>=]]>  STR_TO_DATE(#{pd.b_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.b_end_date !=null and pd.b_end_date !='' ">
+        and e.begin_date <![CDATA[<=]]>  STR_TO_DATE(#{pd.b_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 收货时间 -->
+      <if test=" pd.e_begin_date !=null and pd.e_begin_date !='' ">
+        and e.END_DATE <![CDATA[>=]]>  STR_TO_DATE(#{pd.e_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.e_end_date !=null and pd.e_end_date !='' ">
+        and e.END_DATE <![CDATA[<=]]>  STR_TO_DATE(#{pd.e_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 车型 (车系)-->
+      <if test=" pd.modle_id !=null and pd.modle_id !='' ">
+        and e.MODLE_ID =  #{pd.modle_id}
+      </if>
+      <!-- 品牌 -->
+      <if test=" pd.brand_id !=null and pd.brand_id !='' ">
+        and   exists ( select  ee.ID  from e_auto_mat ee where ee.Id=e.MODLE_ID  and ee.PARENT_ID=#{pd.brand_id} )
+      </if>
+      <!-- 匹配路线 start    -->
+      <if test=" pd.SRC_LINE_1 !=null and pd.SRC_LINE_1 !='' ">
+        and  (
+           (e.b_city_id =  #{pd.SRC_LINE_1}  and  e.e_city_id =#{pd.DES_LINE_1})
+         <if test=" pd.SRC_LINE_2 !=null and pd.SRC_LINE_2 !='' ">
+           or (e.b_city_id =  #{pd.SRC_LINE_2}  and  e.e_city_id =#{pd.DES_LINE_2})
+         </if>
+         <if test=" pd.SRC_LINE_3 !=null and pd.SRC_LINE_3 !='' ">
+           or (e.b_city_id =  #{pd.SRC_LINE_3}  and  e.e_city_id =#{pd.DES_LINE_3})
+         </if>
+        )
+      </if>
+       <!-- 匹配路线 end    -->
+       <!-- 发布时间排序 -->
+       order by e.PUBLISH_DATE  desc
+      
+   </select>
+   
+   <!-- 车主待确认的货源 -->
+   <select id="getWaitSupplyGoodsCorelistPage" parameterType="page" resultType="pd">
+     select  
+        e.ORDER_ID,
+		e.STATUS,
+		e.USER_ID,
+		e.ORDER_FLAG,
+		e.ADD_TIME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y/%m/%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y/%m/%d') END_DATE,
+		e.B_ADDID,
+		e.B_CITY_NAME,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_ADDID,
+		e.E_CITY_NAME,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.ISTAKE,
+		e.ISTOOK,
+		e.VEHICLE_ID,
+		e.OWNER_ID,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_NAME,
+		e.MODLE_CODE,
+		e.MODLE_ID,
+		e.MODLE_NAME,
+		getBrandByModleId(e.MODLE_ID) BRAND_NAME,
+		e.NUMBER,
+		e.DES,
+		e.INVOICE_ID,
+		e.COM_ID,
+		e.PRICE,
+		e.DEPOSIT,
+		e.PAYMENT_TIME,
+		e.PAYMENT_FLAG,
+		e.SEL_DATE,
+		e.COM_NAME,
+		e.DRIVER_ID,
+		e.DRIVER_NAME,
+		e.DRIVER_PHONE,
+		e.SEND_TIME,
+		e.ARRIVE_TIME,
+		e.HAND_TIME,
+		e.GET_TIME,
+		DATE_FORMAT(e.PUBLISH_DATE,'%m-%d %H:%i') PUBLISH_DATE,
+<!-- 		DATE_FORMAT(e.PUBLISH_DATE,'%Y-%m-%d %H:%i:%s') PUBLISH_DATE, -->
+		e.REVOKE_DATE,
+		e.COMPLETE_DTAE,
+		e.DIRECT_PRICE,
+		e.IS_TAX,
+		e.VIN,
+		e.CAR_NO,
+		e.IS_REPEAT,
+		e.REPEAT_DATE
+        from  E_ORDER   e   
+      where 
+      e.ORDER_FLAG=#{pd.order_flag}  <!-- 是否是订单 -->
+      and e.USER_ID=#{pd.user_id}
+      and  e.status in(10211002,10211001) <!-- 只要有报价都可以确认报价 -->
+      and  EXISTS  (select o.order_id from  E_ORDER_PRICE o where o.order_id =e.order_id and o.DEALER_EXAMINE=10141002)
+       <!-- 起运城市 -->
+      <if test=" pd.b_city_id !=null and pd.b_city_id !='' ">
+        and e.b_city_id =#{pd.b_city_id}
+      </if>
+      <!-- 到达城市 -->
+      <if test=" pd.e_city_id !=null and pd.e_city_id !='' ">
+        and e.e_city_id =#{pd.e_city_id}
+      </if>
+      <!-- 发货时间 -->
+      <if test=" pd.b_begin_date !=null and pd.b_begin_date !='' ">
+        and e.begin_date <![CDATA[>=]]>  STR_TO_DATE(#{pd.b_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.b_end_date !=null and pd.b_end_date !='' ">
+        and e.begin_date <![CDATA[<=]]>  STR_TO_DATE(#{pd.b_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 收货时间 -->
+     <if test=" pd.e_begin_date !=null and pd.e_begin_date !='' ">
+        and e.END_DATE <![CDATA[>=]]>  STR_TO_DATE(#{pd.e_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.e_end_date !=null and pd.e_end_date !='' ">
+        and e.END_DATE <![CDATA[<=]]>  STR_TO_DATE(#{pd.e_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 车型 (车系)-->
+      <if test=" pd.modle_id !=null and pd.modle_id !='' ">
+        and e.MODLE_ID =  #{pd.modle_id}
+      </if>
+      <!-- 品牌 -->
+      <if test=" pd.brand_id !=null and pd.brand_id !='' ">
+        and   exists ( select  ee.ID  from e_auto_mat ee where ee.Id=e.MODLE_ID  and ee.PARENT_ID=#{pd.brand_id} )
+      </if>
+      <!-- vin查询 -->
+      <if test="pd.vin!=null and pd.vin !='' ">
+         and e.vin like  CONCAT('%',#{pd.vin},'%')
+      </if>
+        <!-- 发布时间排序 -->
+       order by e.PUBLISH_DATE  desc
+   </select>
+   <!-- 车主抢单中的货源 -->
+   <select id="getOfferSupplyGoodsCorelistPage" parameterType="page" resultType="pd">
+     select  
+        e.ORDER_ID,
+		e.STATUS,
+		e.USER_ID,
+		e.ORDER_FLAG,
+		e.ADD_TIME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y/%m/%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y/%m/%d') END_DATE,
+<!-- 		e.BEGIN_DATE, -->
+<!-- 		e.END_DATE, -->
+		e.B_ADDID,
+		e.B_CITY_NAME,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_ADDID,
+		e.E_CITY_NAME,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.ISTAKE,
+		e.ISTOOK,
+		e.VEHICLE_ID,
+		e.OWNER_ID,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_NAME,
+		e.MODLE_CODE,
+		e.MODLE_ID,
+		e.MODLE_NAME,
+		getBrandByModleId(e.MODLE_ID) BRAND_NAME,
+		e.NUMBER,
+		e.DES,
+		e.INVOICE_ID,
+		e.COM_ID,
+		e.PRICE,
+		e.DEPOSIT,
+		e.PAYMENT_TIME,
+		e.PAYMENT_FLAG,
+		e.SEL_DATE,
+		e.COM_NAME,
+		e.DRIVER_ID,
+		e.DRIVER_NAME,
+		e.DRIVER_PHONE,
+		e.SEND_TIME,
+		e.ARRIVE_TIME,
+		e.HAND_TIME,
+		e.GET_TIME,
+		DATE_FORMAT(e.PUBLISH_DATE,'%m-%d %H:%i') PUBLISH_DATE,
+<!-- 		DATE_FORMAT(e.PUBLISH_DATE,'%Y-%m-%d %H:%i:%s') PUBLISH_DATE, -->
+<!-- 		e.PUBLISH_DATE, -->
+		e.REVOKE_DATE,
+		e.COMPLETE_DTAE,
+		e.DIRECT_PRICE,
+		e.IS_TAX,
+		e.VIN,
+		e.CAR_NO,
+		e.IS_REPEAT,
+		e.REPEAT_DATE
+        from  E_ORDER   e   
+      where 
+      e.ORDER_FLAG=#{pd.order_flag}  <!-- 是否是订单 -->
+      and e.USER_ID=#{pd.user_id}
+      and  e.status in(#{pd.status},10211000,10211016)
+<!--       and not EXISTS  (select o.order_id from  E_ORDER_PRICE o where o.order_id =e.order_id  ) -->
+       <!-- 起运城市 -->
+      <if test=" pd.b_city_id !=null and pd.b_city_id !='' ">
+        and e.b_city_id =#{pd.b_city_id}
+      </if>
+      <!-- 到达城市 -->
+      <if test=" pd.e_city_id !=null and pd.e_city_id !='' ">
+        and e.e_city_id =#{pd.e_city_id}
+      </if>
+      <!-- 发货时间 -->
+      <if test=" pd.b_begin_date !=null and pd.b_begin_date !='' ">
+        and e.begin_date <![CDATA[>=]]>  STR_TO_DATE(#{pd.b_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.b_end_date !=null and pd.b_end_date !='' ">
+        and e.begin_date <![CDATA[<=]]>  STR_TO_DATE(#{pd.b_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 收货时间 -->
+     <if test=" pd.e_begin_date !=null and pd.e_begin_date !='' ">
+        and e.END_DATE <![CDATA[>=]]>  STR_TO_DATE(#{pd.e_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.e_end_date !=null and pd.e_end_date !='' ">
+        and e.END_DATE <![CDATA[<=]]>  STR_TO_DATE(#{pd.e_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 车型 (车系)-->
+      <if test=" pd.modle_id !=null and pd.modle_id !='' ">
+        and e.MODLE_ID =  #{pd.modle_id}
+      </if>
+      <!-- 品牌 -->
+      <if test=" pd.brand_id !=null and pd.brand_id !='' ">
+        and   exists ( select  ee.ID  from e_auto_mat ee where ee.Id=e.MODLE_ID  and ee.PARENT_ID=#{pd.brand_id} )
+      </if>
+       <!-- vin查询 -->
+      <if test="pd.vin!=null and pd.vin !='' ">
+         and e.vin like  CONCAT('%',#{pd.vin},'%')
+      </if>
+        <!-- 发布时间排序 -->
+       order by e.PUBLISH_DATE  desc
+   </select>
+   <!-- 车主需要重新发布的货源 -->
+   <select id="getAgainSupplyGoodsCorelistPage" parameterType="page" resultType="pd">
+     select  
+        e.ORDER_ID,
+		e.STATUS,
+		e.USER_ID,
+		e.ORDER_FLAG,
+		e.ADD_TIME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y/%m/%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y/%m/%d') END_DATE,
+		e.B_ADDID,
+		e.B_CITY_NAME,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_ADDID,
+		e.E_CITY_NAME,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.ISTAKE,
+		e.ISTOOK,
+		e.VEHICLE_ID,
+		e.OWNER_ID,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_NAME,
+		e.MODLE_CODE,
+		e.MODLE_ID,
+		e.MODLE_NAME,
+		getBrandByModleId(e.MODLE_ID) BRAND_NAME,
+		e.NUMBER,
+		e.DES,
+		e.INVOICE_ID,
+		e.COM_ID,
+		e.PRICE,
+		e.DEPOSIT,
+		e.PAYMENT_TIME,
+		e.PAYMENT_FLAG,
+		e.SEL_DATE,
+		e.COM_NAME,
+		e.DRIVER_ID,
+		e.DRIVER_NAME,
+		e.DRIVER_PHONE,
+		e.SEND_TIME,
+		e.ARRIVE_TIME,
+		e.HAND_TIME,
+		e.GET_TIME,
+		DATE_FORMAT(e.PUBLISH_DATE,'%m-%d %H:%i') PUBLISH_DATE,
+<!-- 		DATE_FORMAT(e.PUBLISH_DATE,'%Y-%m-%d %H:%i:%s') PUBLISH_DATE, -->
+		e.REVOKE_DATE,
+		e.COMPLETE_DTAE,
+		e.DIRECT_PRICE,
+		e.IS_TAX,
+		e.VIN,
+		e.CAR_NO,
+		e.IS_REPEAT,
+		e.REPEAT_DATE
+        from  E_ORDER   e   
+      where 
+<!--    and   e.ORDER_FLAG=#{pd.order_flag}  是否是订单 -->
+        e.status in (10211003,10211005)
+        and e.USER_ID=#{pd.user_id}
+      and  e.is_repeat = 10011002  <!-- 没有重发 的-->
+<!--       and not EXISTS  (select o.order_id from  E_ORDER_PRICE o where o.order_id =e.order_id  ) -->
+       <!-- 起运城市 -->
+      <if test=" pd.b_city_id !=null and pd.b_city_id !='' ">
+        and e.b_city_id =#{pd.b_city_id}
+      </if>
+      <!-- 到达城市 -->
+      <if test=" pd.e_city_id !=null and pd.e_city_id !='' ">
+        and e.e_city_id =#{pd.e_city_id}
+      </if>
+      <!-- 发货时间 -->
+      <if test=" pd.b_begin_date !=null and pd.b_begin_date !='' ">
+        and e.begin_date <![CDATA[>=]]>  STR_TO_DATE(#{pd.b_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.b_end_date !=null and pd.b_end_date !='' ">
+        and e.begin_date <![CDATA[<=]]>  STR_TO_DATE(#{pd.b_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 收货时间 -->
+      <if test=" pd.e_begin_date !=null and pd.e_begin_date !='' ">
+        and e.END_DATE <![CDATA[>=]]>  STR_TO_DATE(#{pd.e_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.e_end_date !=null and pd.e_end_date !='' ">
+        and e.END_DATE <![CDATA[<=]]>  STR_TO_DATE(#{pd.e_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 车型 (车系)-->
+      <if test=" pd.modle_id !=null and pd.modle_id !='' ">
+        and e.MODLE_ID =  #{pd.modle_id}
+      </if>
+      <!-- 品牌 -->
+      <if test=" pd.brand_id !=null and pd.brand_id !='' ">
+        and   exists ( select  ee.ID  from e_auto_mat ee where ee.Id=e.MODLE_ID  and ee.PARENT_ID=#{pd.brand_id} )
+      </if>
+       <!-- vin查询 -->
+      <if test="pd.vin!=null and pd.vin !='' ">
+         and e.vin like  CONCAT('%',#{pd.vin},'%')
+      </if>
+        <!-- 发布时间排序 -->
+       order by e.PUBLISH_DATE  desc
+   </select>
+   
+   <!-- 获取订单表（货源的）的车型 -->
+   <select id="getOrderModle" parameterType="pd" resultType="pd">
+     select  
+        distinct
+		e.MODLE_ID,
+		e.MODLE_CODE,
+		e.MODLE_NAME
+        from  E_ORDER   e  
+      where 
+      e.ORDER_FLAG=10021001  <!-- 是否是订单 -->   
+   </select>
+   <!-- 获取起始城市 -->
+   <select id="getStartCity" parameterType="pd" resultType="pd">
+		SELECT
+			e.REGION_CODE,e.REGION_NAME,e.CITY_NAME,e.PROV_NAME
+		FROM
+			E_REGION e
+		WHERE
+		 e.type = #{city_type}   <!-- 省份   城市-->
+		  order by e.REGION_CODE  asc
+		<!--  and	EXISTS (
+				SELECT
+					ee.B_CITY_ID
+				FROM
+					E_ORDER ee
+				WHERE
+				AND ee.B_CITY_ID = e.REGION_CODE
+				AND ee.ORDER_FLAG = 10021001
+			) -->
+   </select>
+   <!-- 获取到大城市 -->
+   <select id="getEndCity" parameterType="pd" resultType="pd">  
+	     SELECT
+			e.REGION_CODE,e.REGION_NAME,e.CITY_NAME,e.PROV_NAME
+		FROM
+			E_REGION e
+		WHERE
+		 e.type = #{city_type}   <!-- 省份   城市-->
+		  order by e.REGION_CODE  asc
+		<!--  and	EXISTS (
+				SELECT
+					ee.E_CITY_ID
+				FROM
+					E_ORDER ee
+				WHERE
+				AND ee.E_CITY_ID = e.REGION_CODE
+				AND ee.ORDER_FLAG = 10021001
+			)   -->
+   </select>
+   <!-- 查询城市 -->
+   <select id="getCityByProvId" parameterType="pd" resultType="pd">
+     select  e.REGION_CODE,e.REGION_NAME,e.CITY_NAME,e.PROV_NAME  from  
+      	E_REGION e
+		WHERE
+		 e.PROV=#{REGION_CODE}
+		 <if test=" type !=null and type !='' ">
+		   and e.type=#{type}
+		 </if>
+		 order by e.REGION_CODE  asc
+   </select>
+  
+  <!-- 根据用户id查询司机线路 -->
+  <select id="getLineByUserId" parameterType="pd" resultType="pd">
+		  SELECT
+			l.*
+		FROM
+			E_USER_VEHICLE ev
+		INNER JOIN E_VEHICLE v ON v.VEHICLE_ID = ev.VEHICLE_ID
+		INNER JOIN  e_line  l on l.VEHICLE_ID=v.VEHICLE_ID
+		WHERE  ev.USER_ID=#{user_id}
+  </select>
+  
+  <!-- 货源中心 -->
+   <select id="getSupplyGoodsCoreList" parameterType="page" resultType="pd">
+      select  
+        e.ORDER_ID,
+		e.STATUS,
+		e.USER_ID,
+		e.ORDER_FLAG,
+		e.ADD_TIME,
+		e.BEGIN_DATE,
+		e.END_DATE,
+		e.B_ADDID,
+		e.B_CITY_CODE,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_ADDID,
+		e.E_CITY_CODE,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.ISTAKE,
+		e.ISTOOK,
+		e.VEHICLE_ID,
+		e.OWNER_ID,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_NAME,
+		e.MODLE_CODE,
+		e.MODLE_ID,
+		e.MODLE_NAME,
+		e.NUMBER,
+		e.DES,
+		e.INVOICE_ID,
+		e.COM_ID,
+		e.PRICE,
+		e.DEPOSIT,
+		e.PAYMENT_TIME,
+		e.PAYMENT_FLAG,
+		e.SEL_DATE,
+		e.COM_NAME,
+		e.DRIVER_ID,
+		e.DRIVER_NAME,
+		e.DRIVER_PHONE,
+		e.SEND_TIME,
+		e.ARRIVE_TIME,
+		e.HAND_TIME,
+		e.GET_TIME,
+		DATE_FORMAT(e.PUBLISH_DATE,'%m-%d %H:%i') PUBLISH_DATE,
+<!-- 		e.PUBLISH_DATE, -->
+		e.REVOKE_DATE,
+		e.COMPLETE_DTAE,
+		e.DIRECT_PRICE,
+		e.IS_TAX,
+		e.VIN,
+		e.CAR_NO,
+		e.IS_REPEAT,
+		e.REPEAT_DATE
+        from  E_ORDER   e   
+      where 
+      e.ORDER_FLAG=10021001  <!-- 是否是订单 -->
+       <!-- 起运城市 -->
+      <if test=" pd.b_city_id !=null and pd.b_city_id !='' ">
+        and e.b_city_id =#{pd.b_city_id}
+      </if>
+      <!-- 到达城市 -->
+      <if test=" pd.e_city_id !=null and pd.e_city_id !='' ">
+        and e.e_city_id =#{pd.e_city_id}
+      </if>
+      <!-- 发货时间 -->
+      <if test=" pd.b_begin_date !=null and pd.b_begin_date !='' ">
+        and e.begin_date <![CDATA[>=]]>  STR_TO_DATE(#{pd.b_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.b_end_date !=null and pd.b_end_date !='' ">
+        and e.begin_date <![CDATA[<=]]>  STR_TO_DATE(#{pd.b_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 收货时间 -->
+      <if test=" pd.e_end_date !=null and pd.e_end_date !='' ">
+        and e.END_DATE <![CDATA[>=]]>  STR_TO_DATE(#{pd.e_end_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.e_end_date !=null and pd.e_end_date !='' ">
+        and e.END_DATE <![CDATA[<=]]>  STR_TO_DATE(#{pd.e_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 车型 (车系)-->
+      <if test=" pd.modle_id !=null and pd.modle_id !='' ">
+        and e.MODLE_ID =  #{pd.modle_id}
+      </if>
+      <!-- 品牌 -->
+      <if test=" pd.brand_id !=null and pd.brand_id !='' ">
+        and   exists ( select  ee.ID  from e_auto_mat ee where ee.Id=e.MODLE_ID  and ee.PARENT_ID=#{pd.brand_id} )
+      </if>
+        <!-- 发布时间排序 -->
+       order by e.PUBLISH_DATE  desc
+   </select>
+   
+   
+   
+    <!-- 查询配货大厅（货主端） -->
+   <select id="getOwnerSupplyGoodsList" parameterType="page" resultType="pd">
+      select  
+        e.ORDER_ID,
+		e.STATUS,
+		e.USER_ID,
+		e.ORDER_FLAG,
+		e.ADD_TIME,
+		e.BEGIN_DATE,
+		e.END_DATE,
+		e.B_ADDID,
+		e.B_CITY_CODE,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_ADDID,
+		e.E_CITY_CODE,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.ISTAKE,
+		e.ISTOOK,
+		e.VEHICLE_ID,
+		e.OWNER_ID,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_NAME,
+		e.MODLE_CODE,
+		e.MODLE_ID,
+		e.MODLE_NAME,
+		e.NUMBER,
+		e.DES,
+		e.INVOICE_ID,
+		e.COM_ID,
+		e.PRICE,
+		e.DEPOSIT,
+		e.PAYMENT_TIME,
+		e.PAYMENT_FLAG,
+		e.SEL_DATE,
+		e.COM_NAME,
+		e.DRIVER_ID,
+		e.DRIVER_NAME,
+		e.DRIVER_PHONE,
+		e.SEND_TIME,
+		e.ARRIVE_TIME,
+		e.HAND_TIME,
+		e.GET_TIME,
+		DATE_FORMAT(e.PUBLISH_DATE,'%m-%d %H:%i') PUBLISH_DATE,
+<!-- 		e.PUBLISH_DATE, -->
+		e.REVOKE_DATE,
+		e.COMPLETE_DTAE,
+		e.DIRECT_PRICE,
+		e.IS_TAX,
+		e.VIN,
+		e.CAR_NO,
+		e.IS_REPEAT,
+		e.REPEAT_DATE
+        from  E_ORDER   e   
+      where 
+      e.ORDER_FLAG=10021001  <!-- 是否是订单 -->
+      and  e.USER_ID=#{pd.user_id}
+       <!-- 起运城市 -->
+      <if test=" pd.b_city_id !=null and pd.b_city_id !='' ">
+        and e.b_city_id =#{pd.b_city_id}
+      </if>
+      <!-- 到达城市 -->
+      <if test=" pd.e_city_id !=null and pd.e_city_id !='' ">
+        and e.e_city_id =#{pd.e_city_id}
+      </if>
+      <!-- 发货时间 -->
+      <if test=" pd.b_begin_date !=null and pd.b_begin_date !='' ">
+        and e.begin_date <![CDATA[>=]]>  STR_TO_DATE(#{pd.b_begin_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.b_end_date !=null and pd.b_end_date !='' ">
+        and e.begin_date <![CDATA[<=]]>  STR_TO_DATE(#{pd.b_end_date},"%Y-%m-%d") 
+      </if>
+      <!-- 收货时间 -->
+      <if test=" pd.e_end_date !=null and pd.e_end_date !='' ">
+        and e.END_DATE <![CDATA[>=]]>  STR_TO_DATE(#{pd.e_end_date},"%Y-%m-%d") 
+      </if>
+      <if test=" pd.e_end_date !=null and pd.e_end_date !='' ">
+        and e.END_DATE <![CDATA[<=]]>  STR_TO_DATE(#{pd.e_end_date},"%Y-%m-%d") 
+      </if>
+     <!-- 车型 (车系)-->
+      <if test=" pd.modle_id !=null and pd.modle_id !='' ">
+        and e.MODLE_ID =  #{pd.modle_id}
+      </if>
+      <!-- 品牌 -->
+      <if test=" pd.brand_id !=null and pd.brand_id !='' ">
+        and   exists ( select  ee.ID  from e_auto_mat ee where ee.Id=e.MODLE_ID  and ee.PARENT_ID=#{pd.brand_id} )
+      </if>
+        <!-- 发布时间排序 -->
+       order by e.PUBLISH_DATE  desc
+      
+   </select>
+  
+  <!-- 根据用户id查询经销商信息 -->
+  <select id="getBaseDealerByUserId" parameterType="pd" resultType="pd">
+     select  b.*  from  base_dealer  b  inner join  sys_user  s on s.dealer_id =b.dealer_id
+     where s.user_id=#{user_id}
+  </select>
+  <!-- 保存联系人 -->
+  <insert id="saveEcontacts" parameterType="pd">
+     insert into E_CONTACTS
+     (
+        CONTACTS_ID,
+		USER_ID,
+		CON_NAME,
+		CON_PHONE,
+		<if test=" con_num!=null and con_num !=''">
+		CON_NUM,
+		</if>
+<!-- 		CON_TYPE, -->
+		ADD_DATE,
+		ADD_ID,
+		DEALER_ID,
+		CREATE_BY,
+		CREATE_DATE
+      )values(
+        #{contacts_id},
+        #{user_id},
+        #{con_name},
+        #{con_phone},
+        <if test=" con_num!=null and con_num !=''">
+        #{con_num},
+		</if>
+        now(),
+        #{user_id},
+        #{dealer_id},
+        #{user_id},
+        now()
+      )
+  </insert>
+  <!-- 根据用户id查询用户信息 -->
+  <select id="getSysUserByUserId" parameterType="pd" resultType="pd">
+     select u.*  from   sys_user  u  where  u.user_id = #{user_id}
+  </select>
+  <!-- 根据联系人id查询联系人信息 -->
+  <select id="getEcontactsByContactsId" parameterType="pd" resultType="pd">
+     select u.*  from   E_CONTACTS  u  where  u.CONTACTS_ID = #{contacts_id}
+  </select>
+  <!-- 根据物料id查询物料信息 -->
+  <select id="getEautoMatById" parameterType="pd" resultType="pd">
+     select u.*  from   E_AUTO_MAT  u  where  u.ID = #{id}
+  </select>
+  
+  <!-- 保存货源信息 -->
+  <insert id="savePublishSupplyGoods" parameterType="pd">
+      insert  into  E_ORDER(
+        ORDER_ID,
+		BEGIN_DATE,
+		END_DATE,
+		B_CITY_NAME,
+		B_CITY_ID,
+		B_ADD,
+		E_CITY_NAME,
+		E_CITY_ID,
+		E_ADD,
+		OWNER_ID,
+		OWNER_PHONE,
+		OWNER_NAME,
+		PAY_ID,
+		PAY_PHONE,
+		PAY_NAME,
+		RE_ID,
+		RE_PHONE,
+		RE_NAME,
+		<if test="des !=null and des !=''">
+			DES,
+		</if>
+		MODLE_NAME,
+		MODLE_ID,
+		PUBLISH_DATE,
+		DIRECT_PRICE,
+		IS_TAX,
+		DEALER_ID,
+		VIN,
+		OWNER_PRICE_REMARK,
+		<if test="is_take !=null and is_take !=''">
+			ISTAKE,
+		</if>
+		<if test="is_took !=null and is_took !=''">
+			ISTOOK,
+		</if>
+		<if test="total_price !=null and total_price !=''">
+			PRICE,
+		</if>
+		<if test="is_take_vtc_id !=null and is_take_vtc_id !=''">
+			ISTAKE_VTC_ID,
+		</if>
+		<if test="is_took_vtc_id !=null and is_took_vtc_id !=''">
+			ISTOOK_VTC_ID,
+		</if>
+		USER_ID
+      )values(
+        #{order_id},
+		#{begin_date},
+		#{end_date},
+		#{b_city_name},
+		#{b_city_id},
+		#{b_add},
+		#{e_city_name},
+		#{e_city_id},
+		#{e_add},
+		#{owner_id},
+		#{owner_phone},
+		#{owner_name},
+		#{pay_id},
+		#{pay_phone},
+		#{pay_name},
+		#{re_id},
+		#{re_phone},
+		#{re_name},
+	   <if test="des !=null and des !=''">
+			#{des},
+		</if>
+		#{modle_name},
+		#{modle_id},
+		#{publish_date},
+		#{direct_price},
+		#{is_tax},
+		#{dealer_id},
+		#{vin},
+		#{direct_price},
+		<if test="is_take !=null and is_take !=''">
+			#{is_take},
+		</if>
+		<if test="is_took !=null and is_took !=''">
+			#{is_took},
+		</if>
+		<if test="total_price !=null and total_price !=''">
+			#{total_price},
+		</if>
+		<if test="is_take_vtc_id !=null and is_take_vtc_id !=''">
+			#{is_take_vtc_id},
+		</if>
+		<if test="is_took_vtc_id !=null and is_took_vtc_id !=''">
+			#{is_took_vtc_id},
+		</if>
+		#{user_id}
+      )
+  </insert>
+  
+  <!-- 获取货源详情 -->
+  <select id="getOrderDetailInfoByOrderId" parameterType="pd" resultType="pd">
+		select e.ORDER_ID,
+	    	IFNULL(C.TOOK_PRICE,0) TOOK_PRICE,
+			IFNULL(C.TAKE_PRICE,0) TAKE_PRICE,
+			IFNULL(C.TAX_PRICE,0) TAX_PRICE,
+			BD.DEALER_NAME TAKE_NAME,
+			BD.LONGITUDE B_LONGITUDE,
+			BD.LATITUDE  B_LATITUDE,
+			BDD.DEALER_NAME TOOK_NAME,
+			BDD.LONGITUDE E_LONGITUDE,
+			BDD.LATITUDE E_LATITUDE,
+			Z.GET_DRIVER_HEAD_URL,
+			Z.GET_DRIVER_NAME,
+			Z.GET_DRIVER_TEL,
+			Z.SEND_DRIVER_HEAD_URL,
+			Z.SEND_DRIVER_NAME,
+			Z.SEND_DRIVER_TEL,
+			e.STATUS,
+			e.USER_ID,
+			e.ORDER_FLAG,
+			e.ADD_TIME,
+			e.BEGIN_DATE,
+			e.END_DATE,
+			e.B_ADDID,
+			e.B_CITY_NAME,
+			e.B_CITY_ID,
+			e.B_ADD,
+			e.E_ADDID,
+			e.E_CITY_NAME,
+			e.E_CITY_ID,
+			e.E_ADD,
+			e.ISTOOK,
+			e.ISTAKE,
+			e.VEHICLE_ID,
+			e.OWNER_ID,
+			e.OWNER_PHONE,
+			e.OWNER_NAME,
+			e.PAY_ID,
+			e.PAY_PHONE,
+			e.PAY_NAME,
+			e.RE_ID,
+			e.RE_PHONE,
+			e.RE_NAME,
+			e.MODLE_ID,
+			e.MODLE_NAME,
+			e.MODLE_CODE,
+			e.NUMBER,
+			e.DES,
+			e.INVOICE_ID,
+			e.COM_ID,
+			e.PRICE,
+			e.DEPOSIT,
+			e.PAYMENT_TIME,
+			e.PAYMENT_FLAG,
+			e.SEL_DATE,
+			e.COM_NAME,
+			e.DRIVER_ID,
+			e.DRIVER_NAME,
+			e.DRIVER_PHONE,
+			e.SEND_TIME,
+			e.ARRIVE_TIME,
+			e.HAND_TIME,
+			e.GET_TIME,
+			DATE_FORMAT(e.PUBLISH_DATE,'%m-%d %H:%i') PUBLISH_DATE,
+			e.REVOKE_REMARK,
+			e.REVOKE_USER_ID,
+			e.REVOKE_DATE,
+			e.COMPLETE_DTAE,
+			e.DIRECT_PRICE,
+			e.IS_TAX,
+			e.VIN,
+			e.CAR_NO,
+			e.IS_REPEAT,
+			e.REPEAT_DATE,
+			e.ORDER_PRODUCE,
+	      getBrandByModleId(e.MODLE_ID) BRAND_NAME,
+	      DATE_FORMAT(DATE_ADD(e.PUBLISH_DATE, INTERVAL +180 MINUTE),'%H:%i') THIS_COMPLETE_DTAE,
+	      ABS(TIMESTAMPDIFF(MINUTE,now(),DATE_ADD(e.PUBLISH_DATE, INTERVAL +180 MINUTE))) THIS_HOUR,  
+	      ABS(TIMESTAMPDIFF(MINUTE,now(),DATE_ADD(e.PUBLISH_DATE, INTERVAL +240 MINUTE))) SURPLUS_HOUR,  <!-- 剩余确认时间 -->
+	      DATE_FORMAT(DATE_ADD(e.PUBLISH_DATE, INTERVAL +240 MINUTE),'%H:%i') OWNER_COMPLETE_DTAE
+	  from  E_ORDER  e 
+			inner JOIN base_dealer bd on e.ISTAKE_VTC_ID=bd.DEALER_ID and bd.DEALER_TYPE=10151004
+			inner JOIN base_dealer bdd on e.ISTOOK_VTC_ID=bdd.DEALER_ID and bdd.DEALER_TYPE=10151004
+			left join 
+			(
+				select ORDER_ID,
+					MAX(case when COST_TYPE = 10371001 then AMOUNT else 0 end) TOOK_PRICE,
+					MAX(case when COST_TYPE = 10371002 then AMOUNT else 0 end) TAKE_PRICE,
+					MAX(case when COST_TYPE = 10371004 then AMOUNT else 0 end) TAX_PRICE
+				from e_order_cost where ORDER_ID=#{order_id}
+			) c  on e.ORDER_ID=c.ORDER_ID
+			LEFT JOIN 
+			(
+				select oo.ORDER_ID,
+				MAX(CASE WHEN oo.TYPE = 10381001 then u.`NAME` else null end) get_driver_name,
+				MAX(CASE WHEN oo.TYPE = 10381001 then u.TEL else null end) get_driver_Tel,
+				MAX(CASE WHEN oo.TYPE = 10381001 then ff.URL  else null end) get_driver_head_url,
+				MAX(CASE WHEN oo.TYPE = 10381002 then u.`NAME` else null end) send_driver_name,
+				MAX(CASE WHEN oo.TYPE = 10381002 then u.TEL else null end) send_driver_Tel,
+				MAX(CASE WHEN oo.TYPE = 10381002 then ff.URL  else null end) send_driver_head_url
+				from e_order_other oo INNER JOIN sys_user u on oo.DRIVER_ID=u.user_id
+				LEFT JOIN e_files ff on u.USER_ID=ff.OBJECT_ID and ff.FILE_STATUS=10021001 and ff.USE_TYPE=10181006
+				where oo.ORDER_ID=#{order_id}
+			) z on e.ORDER_ID=z.ORDER_ID
+		where e.ORDER_ID=#{order_id}  
+  </select>
+  
+  <!-- 根据货源id查询报价(司机)-->
+  <select id="getgetOrderDetailPriceInfoByOrderId" parameterType="pd" resultType="pd">
+    SELECT
+		wo.PRICE_ID,
+		wo.ORDER_ID,
+<!-- 		wo.PRICE_DATE, -->
+		DATE_FORMAT(wo.PRICE_DATE,'%Y-%m-%d %H:%i') PRICE_DATE,
+		wo.PRICE,
+		wo.COM_ID,
+		wo.COM_NAME,
+		wo.SELECTED,
+		wo.SELECTED_DATE,
+		wo.DRIVER_ID,
+		wo.DRIVER_NAME,
+		wo.CREATE_BY,
+		wo.CREATE_DATE,
+		wo.UPDATE_BY,
+		wo.UPDATE_DATE,
+		o.PAY_ID,
+		o.PAY_PHONE,
+		o.PAY_NAME,
+		o.RE_ID,
+		o.RE_PHONE,
+		o.RE_NAME,
+		getHeadPic(wo.DRIVER_ID)  HEAD_PIC_URL ,
+		getDriverOrderCount(wo.DRIVER_ID)  ORDER_COUNT,
+		ifnull(ev.EVALUATE_AVG,0) EVALUATE_AVG,
+		wo.PRICE_NUM,
+		wo.EXAMINE_MSG,
+		wo.DEALER_EXAMINE
+	FROM
+		E_ORDER_PRICE wo
+	INNER JOIN   e_order o on o.ORDER_ID= wo.ORDER_ID
+	LEFT JOIN   e_vehicle  ev ON ev.VEHICLE_ID=o.VEHICLE_ID
+	WHERE wo.order_id = #{order_id}
+  </select>
+  
+<!-- 根据货源id查询报价-->
+  <select id="getgetOrderDetailPriceInfoByOrderIdNew" parameterType="pd" resultType="pd">
+    SELECT
+		wo.PRICE_ID,
+		wo.ORDER_ID,
+<!-- 		wo.PRICE_DATE, -->
+		DATE_FORMAT(wo.PRICE_DATE,'%Y-%m-%d %H:%i') PRICE_DATE,
+		wo.PRICE,
+		wo.COM_ID,
+		wo.COM_NAME,
+		wo.SELECTED,
+		wo.SELECTED_DATE,
+		wo.DRIVER_ID,
+		wo.DRIVER_NAME,
+		wo.CREATE_BY,
+		wo.CREATE_DATE,
+		wo.UPDATE_BY,
+		wo.UPDATE_DATE,
+		getHeadPic(wo.DRIVER_ID)  HEAD_PIC_URL ,
+		getDriverOrderCount(wo.DRIVER_ID)  ORDER_COUNT,
+		ifnull(ev.EVALUATE_AVG,0) EVALUATE_AVG,
+		wo.PRICE_NUM,
+		wo.EXAMINE_MSG,
+		wo.DEALER_EXAMINE
+	FROM
+		E_ORDER_PRICE wo
+	INNER JOIN   e_order o on o.ORDER_ID= wo.ORDER_ID
+	LEFT JOIN   e_vehicle  ev ON ev.VEHICLE_ID=o.VEHICLE_ID
+	WHERE wo.order_id = #{order_id}
+	and wo.DEALER_EXAMINE=10141002
+  </select>
+  
+  <!-- 根据车辆id查询司机 -->
+  <select id="getSysUserAndEvehicleByDriverId" parameterType="pd" resultType="pd">
+      SELECT
+			u.*
+		FROM
+			e_vehicle v
+		INNER JOIN e_user_vehicle ev ON v.VEHICLE_ID = ev.VEHICLE_ID
+		INNER JOIN sys_user u ON u.USER_ID = ev.USER_ID
+		where  v.VEHICLE_ID=#{vehicle_id}
+		 and u.status=10021001
+  </select>
+  
+  <!-- 根据司机id查询车辆 -->
+  <select id="getEvehicleByDriverId" resultType="pd"  parameterType="pd">
+		SELECT
+			v.*
+		FROM
+			e_vehicle v
+		INNER JOIN e_user_vehicle ev ON v.VEHICLE_ID = ev.VEHICLE_ID
+		INNER JOIN sys_user u ON u.USER_ID = ev.USER_ID
+		where  u.USER_ID=#{driver_id}
+  </select>
+  
+  <!-- 根据车辆id查询线路 -->
+  <select id="getElineByVehicleId" parameterType="pd" resultType="pd">
+     SELECT  e.*  from  e_line  e  where e.VEHICLE_ID=#{vehicle_id}
+  </select>
+  
+  <!-- 根据货源id查询报价 -->
+  <select id="getEorderPriceByOrderId" parameterType="pd" resultType="pd">
+     select  e.*  from  E_ORDER_PRICE   e  where e.order_id =#{order_id}
+  </select>
+  <!-- 保存报价 -->
+  <insert id="saveGrabOrderAndSubPrice" parameterType="pd">
+     insert  into   e_order_price
+     (
+        PRICE_ID,
+		ORDER_ID,
+		PRICE_DATE,
+		PRICE,
+		COM_ID,
+		COM_NAME,
+		DRIVER_ID,
+		DRIVER_NAME,
+		BUSINESS_BY,
+		CREATE_BY,
+		CREATE_DATE
+     )values (
+        #{price_id},
+		#{order_id},
+		#{price_date},
+		#{price},
+		#{com_id},
+		#{com_name},
+		#{driver_id},
+		#{driver_name},
+		#{business_by},
+		#{create_by},
+		#{create_date}
+     )
+  </insert>
+  
+  <!-- 保存报价副本 -->
+  <insert id="insertCopyThisPriceInNewTable" parameterType="pd">
+     insert  into   e_order_price_copy
+     (
+        PRICE_ID,
+		ORDER_ID,
+		PRICE_DATE,
+		PRICE,
+		COM_ID,
+		COM_NAME,
+		DRIVER_ID,
+		DRIVER_NAME,
+		BUSINESS_BY,
+		CREATE_BY,
+		CREATE_DATE
+     )values (
+        #{price_id},
+		#{order_id},
+		#{price_date},
+		#{price},
+		#{com_id},
+		#{com_name},
+		#{driver_id},
+		#{driver_name},
+		#{business_by},
+		#{create_by},
+		#{create_date}
+     )
+  </insert>
+  <!-- 确认报价，修改报价 -->
+  <update id="updateOwnerConfirmPrice" parameterType="pd">
+     update  E_ORDER_PRICE  e set e.SELECTED=10011001,e.SELECTED_DATE=now()  where  e.PRICE_ID=#{price_id}
+  </update>
+  <!-- 根据报价id查询报价表数据 -->
+  <select id="getEorderPriceByPriceId" parameterType="pd" resultType="pd">
+      SELECT  p.*  FROM  e_order_price  p   where p.PRICE_ID=#{price_id}
+  </select>
+  <!-- 根据司机id查询车辆信息，用户信息 -->
+  <select id="getVehicleByDriverId" parameterType="pd" resultType="pd">
+     SELECT
+			e.*,u.TEL,u.USER_NAME
+		FROM
+			e_vehicle e
+		INNER JOIN e_user_vehicle ev ON ev.VEHICLE_ID = e.VEHICLE_ID
+		inner join sys_user u on u.user_id = ev.user_id and u.status=10021001
+		WHERE
+			ev.USER_ID = #{DRIVER_ID}
+  </select>
+  <!-- 修改生成订单 -->
+  <update id="updateEorderByOrderId" parameterType="pd">
+   update  e_order o set 
+           o.status=10211004,
+	       o.ORDER_FLAG=10011001,
+	       o.ADD_TIME=now(),
+	       o.COM_ID=#{COM_ID},
+	       o.SEL_DATE=now(),
+	       o.DIRECT_PRICE=#{PRICE},
+	       o.PRICE=(select SUM(AMOUNT)+#{PRICE} from e_order_cost where ORDER_ID=#{ORDER_ID}),
+	       o.COM_NAME=#{COM_NAME},
+	       o.DRIVER_ID=#{DRIVER_ID},
+	       o.VEHICLE_ID=#{VEHICLE_ID},
+	       o.DRIVER_PHONE=#{DRIVER_PHONE},
+	       o.DRIVER_NAME=#{DRIVER_NAME},
+	       o.ORDER_PRODUCE=10221002,
+	       o.BUSINESS_BY=#{BUSINESS_BY}
+       where o.order_id=#{ORDER_ID}
+  </update>
+  <!-- 保存轨迹 -->
+  <insert id="saveEorderContrail" parameterType="pd">
+     insert  into  E_ORDER_CONTRAIL(
+        COST_ID,
+		ORDER_ID,
+		PROJECT_ID,
+		PROJECT_NAME,
+		CONMENT,
+		NODE_ID,
+		NODE_NAME,
+		CREATE_BY,
+		CREATE_DATE
+     )values(
+        #{cost_id},
+		#{order_id},
+		#{project_id},
+		#{project_name},
+		now(),
+		#{node_id},
+		getSysData(#{node_id}),
+		#{user_id},
+		now()
+     )
+  </insert>
+  <!-- 撤销货源 -->
+  <update id="cancelOwnerSupply" parameterType="pd" >
+     update  e_order  e set e.status=#{status},e.REVOKE_DATE=now(),e.REVOKE_REMARK=#{revoke_remark},e.REVOKE_USER_ID=#{user_id}  where  e.order_id=#{order_id}
+  </update>
+  
+  <select id="againPublishGoods" parameterType="pd">
+     insert  into  E_ORDER(
+        ORDER_ID,
+		USER_ID,
+		BEGIN_DATE,
+		END_DATE,
+		B_CITY_NAME,
+		B_CITY_ID,
+		B_ADD,
+		E_CITY_NAME,
+		E_CITY_ID,
+		E_ADD,
+		OWNER_ID,
+		OWNER_PHONE,
+		OWNER_NAME,
+		PAY_ID,
+		PAY_PHONE,
+		PAY_NAME,
+		RE_ID,
+		RE_PHONE,
+		RE_NAME,
+		DES,
+		MODLE_NAME,
+		MODLE_ID,
+		PUBLISH_DATE,
+		DIRECT_PRICE,
+		IS_TAX,
+		DEALER_ID,
+		AGAIN_ORDER_ID,
+		STATUS,
+		VIN
+      )
+      select  
+        getPrimary(),
+		e.USER_ID,
+		e.BEGIN_DATE,
+		e.END_DATE,
+		e.B_CITY_NAME,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_CITY_NAME,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.OWNER_ID,
+		e.OWNER_PHONE,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_PHONE,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_PHONE,
+		e.RE_NAME,
+		e.DES,
+		e.MODLE_NAME,
+		e.MODLE_ID,
+		now(),
+		e.DIRECT_PRICE,
+		e.IS_TAX,
+		e.DEALER_ID,
+		e.ORDER_ID,
+		STATUS,
+		e.VIN
+		from e_order e 
+		 where e.order_id=#{order_id}
+  </select>
+  
+  <select id="againPublishGoodsNew" parameterType="pd">
+     insert  into  E_ORDER(
+        ORDER_ID,
+		USER_ID,
+		BEGIN_DATE,
+		END_DATE,
+		B_CITY_NAME,
+		B_CITY_ID,
+		B_ADD,
+		E_CITY_NAME,
+		E_CITY_ID,
+		E_ADD,
+		OWNER_ID,
+		OWNER_PHONE,
+		OWNER_NAME,
+		PAY_ID,
+		PAY_PHONE,
+		PAY_NAME,
+		RE_ID,
+		RE_PHONE,
+		RE_NAME,
+		DES,
+		MODLE_NAME,
+		MODLE_ID,
+		PUBLISH_DATE,
+		DIRECT_PRICE,
+		IS_TAX,
+		DEALER_ID,
+		AGAIN_ORDER_ID,
+		VIN,
+		ISTOOK,
+		ISTAKE,
+		ISTAKE_VTC_ID,
+		ISTOOK_VTC_ID,
+		OWNER_PRICE_REMARK,
+		PRICE
+      )
+      select  
+        #{orderNewId},
+		e.USER_ID,
+		#{begin_date},
+		#{end_date},
+		e.B_CITY_NAME,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_CITY_NAME,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.OWNER_ID,
+		e.OWNER_PHONE,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_PHONE,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_PHONE,
+		e.RE_NAME,
+		e.DES,
+		e.MODLE_NAME,
+		e.MODLE_ID,
+		now(),
+		#{direct_price},
+		#{is_tax},
+		e.DEALER_ID,
+		e.ORDER_ID,
+		e.VIN,
+		#{is_took},
+		#{is_take},
+		e.ISTAKE_VTC_ID,
+		e.ISTOOK_VTC_ID,
+		#{direct_price},
+		#{total_price}
+		from e_order e 
+		 where e.order_id=#{order_id}
+  </select>
+  
+  <!-- 修改撤销货源信息 -->
+  <update id="updateEorderStatusByOrderId" parameterType="pd" >
+     update   e_order e set e.status=#{status}, e.is_repeat=#{is_repeat},e.repeat_date=now() where e.order_id=#{order_id}
+  </update>
+  <!-- 根据订单id查询 -->
+   <select id="getSysUserByOrderId" parameterType="pd" resultType="pd">
+      SELECT  u.*  from e_order  o INNER JOIN  sys_user  u on u.USER_ID=o.USER_ID  WHERE o.ORDER_ID=#{order_id}
+   </select>
+   
+   <!-- 司机我的抢单(待确认) -->
+   <select id="getmyGrabSinglelistPage" parameterType="page" resultType="pd">
+	   SELECT
+        e.ORDER_ID,
+		e.STATUS,
+		e.USER_ID,
+		e.ORDER_FLAG,
+		e.ADD_TIME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y/%m/%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y/%m/%d') END_DATE,
+<!-- 		e.BEGIN_DATE, -->
+<!-- 		e.END_DATE, -->
+		e.B_ADDID,
+		e.B_CITY_NAME,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_ADDID,
+		e.E_CITY_NAME,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.ISTAKE,
+		e.ISTOOK,
+		e.VEHICLE_ID,
+		e.OWNER_ID,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_NAME,
+		e.MODLE_CODE,
+		e.MODLE_ID,
+		CONCAT(getBrandByModleId(e.MODLE_ID),e.MODLE_NAME) MODLE_NAME,
+		e.NUMBER,
+		e.DES,
+		e.INVOICE_ID,
+		e.COM_ID,
+		e.PRICE,
+		e.DEPOSIT,
+		e.PAYMENT_TIME,
+		e.PAYMENT_FLAG,
+		e.SEL_DATE,
+		e.COM_NAME,
+		e.DRIVER_ID,
+		e.DRIVER_NAME,
+		e.DRIVER_PHONE,
+		e.SEND_TIME,
+		e.ARRIVE_TIME,
+		e.HAND_TIME,
+		e.GET_TIME,
+		DATE_FORMAT(e.PUBLISH_DATE,'%m-%d %H:%i') PUBLISH_DATE,
+<!-- 		e.PUBLISH_DATE, -->
+		e.REVOKE_DATE,
+		e.COMPLETE_DTAE,
+		e.DIRECT_PRICE,
+		e.IS_TAX,
+		e.VIN,
+		e.CAR_NO,
+		e.IS_REPEAT,
+		DATE_FORMAT(e.REPEAT_DATE,'%Y-%m-%d %H:%i:%s') REPEAT_DATE,
+		getOrderPrice(#{pd.user_id},e.order_id)  ORDER_PRICE,
+		ABS(TIMESTAMPDIFF(MINUTE,now(),DATE_ADD(e.PUBLISH_DATE, INTERVAL +180 MINUTE))) THIS_MINUTE
+	FROM
+		e_order e
+	WHERE
+		e.ORDER_FLAG = 10011002 
+		and e.status in(10211001,10211002)
+		and 
+		EXISTS (
+			SELECT
+				ee.ORDER_ID
+			FROM
+				e_order_price ee
+			WHERE
+				ee.ORDER_ID = e.ORDER_ID
+			AND ee.DRIVER_ID = #{pd.user_id})
+			  <!-- 发布时间排序 -->
+       order by e.PUBLISH_DATE  desc
+   </select>
+   
+   <update id="againPublishGoodsRevoke" parameterType="pd">
+   		update e_order set STATUS=-1  where  order_id=#{sourceId}
+   </update>
+   
+    <!-- 司机我的抢单(失败，没有抢到的) -->
+   <select id="getfailMyGrabSinglelistPage" parameterType="page" resultType="pd">
+     SELECT
+        e.ORDER_ID,
+		e.STATUS,
+		e.USER_ID,
+		e.ORDER_FLAG,
+		e.ADD_TIME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y/%m/%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y/%m/%d') END_DATE,
+		e.B_ADDID,
+		e.B_CITY_NAME,
+		e.B_CITY_ID,
+		e.B_ADD,
+		e.E_ADDID,
+		e.E_CITY_NAME,
+		e.E_CITY_ID,
+		e.E_ADD,
+		e.ISTAKE,
+		e.ISTOOK,
+		e.VEHICLE_ID,
+		e.OWNER_ID,
+		e.OWNER_NAME,
+		e.PAY_ID,
+		e.PAY_NAME,
+		e.RE_ID,
+		e.RE_NAME,
+		e.MODLE_CODE,
+		e.MODLE_ID,
+		CONCAT(getBrandByModleId(e.MODLE_ID),e.MODLE_NAME) MODLE_NAME,
+		e.NUMBER,
+		e.DES,
+		e.INVOICE_ID,
+		e.COM_ID,
+		e.PRICE,
+		e.DEPOSIT,
+		e.PAYMENT_TIME,
+		e.PAYMENT_FLAG,
+		e.SEL_DATE,
+		e.COM_NAME,
+		e.DRIVER_ID,
+		e.DRIVER_NAME,
+		e.DRIVER_PHONE,
+		e.SEND_TIME,
+		e.ARRIVE_TIME,
+		e.HAND_TIME,
+		e.GET_TIME,
+		DATE_FORMAT(e.PUBLISH_DATE,'%m-%d %H:%i') PUBLISH_DATE,
+		e.REVOKE_DATE,
+		e.COMPLETE_DTAE,
+		e.DIRECT_PRICE,
+		e.IS_TAX,
+		e.VIN,
+		e.CAR_NO,
+		e.IS_REPEAT,
+		DATE_FORMAT(e.REPEAT_DATE,'%Y-%m-%d %H:%i:%s') REPEAT_DATE,
+		getOrderPrice(#{pd.user_id},e.order_id)  ORDER_PRICE,
+		ABS(TIMESTAMPDIFF(MINUTE,now(),DATE_ADD(e.PUBLISH_DATE, INTERVAL +180 MINUTE))) THIS_MINUTE
+		FROM
+			e_order e  inner JOIN e_order_price ee on e.ORDER_ID=ee.ORDER_ID
+		WHERE   e.`STATUS` BETWEEN 10211003 and 10211011
+		and ee.SELECTED=10011002
+		and ee.DRIVER_ID=#{pd.user_id}
+	<!-- FROM
+		e_order e
+	WHERE   1=1
+		and (( 
+			EXISTS (e.DRIVER_ID !=#{pd.user_id} and
+				SELECT ee.ORDER_ID
+				FROM
+					e_order_price ee
+				WHERE
+					ee.ORDER_ID = e.ORDER_ID
+					AND ee.DRIVER_ID = #{pd.user_id} 
+			  )
+			  )
+			or (e.status=10211003 and e.DRIVER_ID =#{pd.user_id}) 
+		) -->
+	    <!-- 发布时间排序 -->
+       order by e.PUBLISH_DATE  desc
+   </select>
+   <!-- 修改货源为待确认状态 -->
+   <update id="updateEorderStatusByOrderId1" parameterType="pd">
+      update  e_order  e set e.status=10211002  where   e.order_id=#{order_id}
+   </update>
+   <!-- 根据oder_id和driver_id查询价格表 -->
+   <select id="getOrderPriceByOrderIdAndDriverId" parameterType="pd" resultType="pd">
+      select  e.*  from  E_ORDER_PRICE  e  where  e.ORDER_ID=#{order_id}  and  e.DRIVER_ID=#{driver_id}
+   </select>
+   
+   <insert id="copyThisPriceInNewTable" parameterType="pd">
+		insert into E_ORDER_PRICE_COPY 
+		(PRICE_ID,ORDER_ID,PRICE_DATE,PRICE,COM_ID,COM_NAME,SELECTED,SELECTED_DATE,
+			PRICE_NUM,DRIVER_ID,DRIVER_NAME,BUSINESS_BY,CREATE_BY,CREATE_DATE,DEALER_EXAMINE,
+			EXAMINE_MSG,UPDATE_BY,UPDATE_DATE
+		)
+		SELECT getPrimary(),E.ORDER_ID,E.PRICE_DATE,E.PRICE,E.COM_ID,E.COM_NAME,
+		E.SELECTED,E.SELECTED_DATE,E.PRICE_NUM,E.DRIVER_ID,E.DRIVER_NAME,E.BUSINESS_BY,
+		E.CREATE_BY,E.CREATE_DATE,e.DEALER_EXAMINE,e.EXAMINE_MSG,e.UPDATE_BY,e.UPDATE_DATE
+		from e_order_price e
+		Where e.PRICE_ID=#{price_id}
+   </insert>
+   
+   <update id="updateThisPriceStatusByPriceId" parameterType="pd">
+		update e_order_price 
+		set DEALER_EXAMINE = 10141001,PRICE=#{offer_price},
+		update_by=#{driver_id},UPDATE_DATE=now(),
+		PRICE_NUM=PRICE_NUM+1
+		where PRICE_ID=#{price_id}
+   </update>
+   
+   <select id="getDriverDetailMsg" parameterType="pd" resultType="pd">
+		SELECT u.USER_ID,u.`NAME`,u.TEL,u.CARNUM,d.DEALER_NAME,f.URL HEAD_URL,h.URL HANDLE_USER_URL
+		from sys_user u inner join base_dealer d
+			on u.DEALER_ID=d.DEALER_ID
+		LEFT JOIN e_files f  
+			on f.OBJECT_ID=u.USER_ID and f.FILE_STATUS=10021001 and f.USE_TYPE=10181006 and f.USE_DETIAL_TYPE=10191001
+		LEFT JOIN e_files h
+			on h.OBJECT_ID=u.USER_ID and h.FILE_STATUS=10021001 and h.USE_TYPE=10181001 and h.USE_DETIAL_TYPE=10191004
+		where u.`STATUS`=10021001
+		and u.USER_ID=#{driverId}
+		LIMIT 0,1  
+   </select>
+   
+   <select id="getShortDistanceByLonAndLat"  parameterType="pd"  resultType="pd">
+		 SELECT
+			DEALER_ID,
+			DEALER_NAME,
+			ROUND(
+				6378.138 * 2 * ASIN(
+					SQRT(
+						POW(
+							SIN(
+								(#{lat} * PI() / 180 - LATITUDE * PI() / 180) / 2
+							),2) + 
+							COS(#{lat} * PI() / 180) * COS(LATITUDE * PI() / 180) * POW(
+							SIN((#{lon} * PI() / 180 - LONGITUDE * PI() / 180) / 2),2)
+					)
+				) * 1000
+			) AS DISTINCE_NUM
+		FROM
+			base_dealer
+		WHERE
+			DEALER_TYPE = 10151004
+		ORDER BY
+			DISTINCE_NUM ASC
+		LIMIT 0,1  
+   </select>
+   
+   <select id="getDistanceByLonAndLatList" parameterType="pd" resultType="pd">
+	   SELECT
+				DEALER_ID,
+				DEALER_NAME,
+				ROUND(
+					6378.138 * 2 * ASIN(
+						SQRT(
+							POW(
+								SIN(
+									(#{lat} * PI() / 180 - LATITUDE * PI() / 180) / 2
+								),2) + 
+								COS(#{lat} * PI() / 180) * COS(LATITUDE * PI() / 180) * POW(
+								SIN((#{lon} * PI() / 180 - LONGITUDE * PI() / 180) / 2),2)
+						)
+					) * 1000
+				) AS DISTINCE_NUM
+			FROM
+				base_dealer
+			WHERE
+				DEALER_TYPE = 10151004
+			ORDER BY
+				DISTINCE_NUM ASC
+   </select>
+   
+   <select id="getVtcListByIdAndStatuslistPage" parameterType="page" resultType="pd">
+		select 
+			e.ORDER_ID,
+			e.`STATUS`,
+			e.USER_ID,
+			e.DEALER_ID,
+			DATE_FORMAT(e.ADD_TIME,'%m-%d %H:%i:%s') ORDER_DATE,
+			e.B_ADD,
+			e.E_ADD,
+			e.VIN,
+			DATE_FORMAT(o.ORDER_TIME,'%Y-%m-%d') HOPE_DATE,
+		    CONCAT(n.`NAME`,' ',e.MODLE_NAME) CAR_NAME,
+		    O.ORDER_OTHER_ID,
+			O.VTC_ID,
+			e.DES,
+			O.PRICE SERVER_PRICE,
+			O.TYPE
+		from e_order e 
+			INNER JOIN E_ORDER_OTHER o on e.ORDER_ID=o.order_id
+			INNER JOIN E_AUTO_MAT m on e.MODLE_ID=m.ID
+		    INNER JOIN E_AUTO_MAT n on m.PARENT_ID=n.ID
+		where 1=1
+		<choose>
+			<when test="pd.vtcStatus == 10391001">
+				<!-- 代表未完成 -->
+				and e.`STATUS` in(10211004,10211007)
+				and o.`STATUS`=10391001
+			</when>
+			<when test="pd.vtcStatus == 10391002">
+				<!-- 代表待确认 -->
+				and e.`STATUS` in(10211005,10211006,10211007,10211012,10211013,10211014,10211015)
+				and o.`STATUS` in(10391002,10391003)
+			</when>
+			<otherwise>
+				and e.`STATUS` in(10211009,10211010,10211011)  <!-- 代表已完成 -->
+			</otherwise>
+		</choose>
+		and o.DRIVER_ID=#{pd.userId} 
+   </select>
+   
+   <select id="getVtcOrderDetail" parameterType="pd" resultType="java.util.HashMap">
+ 		select 
+			e.ORDER_ID,
+			e.`STATUS`,
+			e.USER_ID,
+			e.DEALER_ID,
+			DATE_FORMAT(e.PUBLISH_DATE,'%Y-%m-%d %H:%i:%s') PUBLISH_DATE,
+			e.B_ADD,
+			e.E_ADD,
+			e.VIN,
+			e.DES,
+			e.OWNER_NAME,
+			e.OWNER_PHONE,
+			DATE_FORMAT(o.ORDER_TIME,'%Y-%m-%d') HOPE_DATE,
+			n.`NAME` SERIES_NAME,
+			e.MODLE_NAME,
+			O.VTC_ID,
+			O.PRICE SERVER_PRICE,
+			O.TYPE,
+			O.STATUS VTC_STATUS,
+			O.REMARK
+		from e_order e 
+			INNER JOIN E_ORDER_OTHER o on e.ORDER_ID=o.order_id
+			INNER JOIN E_AUTO_MAT m on e.MODLE_ID=m.ID
+		    INNER JOIN E_AUTO_MAT n on m.PARENT_ID=n.ID
+		where e.ORDER_ID=#{orderId}
+			and o.DRIVER_ID=#{userId}
+   </select>
+   
+   <select id="getVtcListByIdPicList"  parameterType="pd"  resultType="pd">
+		select FILE_ID,URL,USE_DETIAL_TYPE 
+		from e_files 
+		where  USE_TYPE=10181011 
+			and FILE_STATUS=10021001 
+			and FILE_TYPE=10171001 
+			and USE_DETIAL_TYPE=#{fileDetail}
+			and OBJECT_ID=#{orderId}
+   </select>
+   
+   <!-- 下面三个方法是短途司机vtc的业务，取车、交车、收车、最终交货 -->
+   <update id="updateVtcFromOwnerFileCommon" parameterType="pd">
+	  update e_files  s set s.object_id=#{orderId},s.file_status=#{fileStatus}  where 
+       s.file_id in 
+       <foreach collection="fileIds" item="file_id"  open="(" separator=","  close=")">
+         #{file_id}
+       </foreach>   
+   </update>
+   <update id="updateVtcOrderStatusCommon" parameterType="pd">
+		update E_ORDER_OTHER 
+			set `STATUS`=#{vtcDriverStatus} 
+			<if test="vtcRemark  != null and vtcRemark  != ''">
+				,REMARK=#{vtcRemark}
+			</if>
+		where ORDER_ID=#{orderId}  and DRIVER_ID= #{userId}
+   </update>
+   <update id="updateOrderStatusByIdCommon" parameterType="pd">
+		UPDATE E_ORDER set `STATUS`=#{orderStatus}
+		where ORDER_ID=#{orderId} 
+   </update>
+   
+   <update id="ownerAddOneHunderd" parameterType="pd">
+   		update sys_user set AMOUNT=AMOUNT+100 where USER_ID=#{user_id}
+   </update>
+   
+   <!-- 支付款项业务 -->
+   <select id="getUserAcountNum" parameterType="pd" resultType="pd">
+		SELECT IFNULL(AMOUNT,0) AMOUNT,TEL,`NAME`,USER_NAME 
+		from sys_user 
+		where USER_ID= #{userId}
+		and `STATUS`=10021001
+   </select>
+   <update id="updateUserMoneyByPayNum" parameterType="pd">
+   		update sys_user set AMOUNT=AMOUNT-#{payNum} where USER_ID=#{userId}
+   </update>
+   
+</mapper>

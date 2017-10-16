@@ -1,0 +1,31 @@
+﻿{
+	"version": [
+		{
+			"android_o": {
+				"versionCode": "100",
+				"versionName": "1.0.0",
+				"updateUrl": "http://eyc.eyunche.com/eyc/version/eych.apk",
+				"forceUpdate": "0",
+				"versionDesc": "1 缺陷修改"
+			},
+			"android_d": {
+				"versionCode": "100",
+				"versionName": "1.0.0",
+				"updateUrl": "http://eyc.eyunche.com/eyc/version/eycs.apk",
+				"forceUpdate": "0",
+				"versionDesc": "1 缺陷修改"
+			}
+		},
+		{
+			"ios": {
+				"versionCode": "104",
+				"versionName": "1.0.4",
+				"updateUrl": "http://fdms.changansuzuki.com:8082/dms/mobile/casuzuki.apk",
+				"forceUpdate": "0",
+				"versionDesc": "1 缺陷修改"
+			}
+		}
+	],
+	"city":"2",
+	"cartype":"2"
+}

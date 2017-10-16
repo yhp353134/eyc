@@ -1,0 +1,1058 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UserXMapper">
+    <!-- <cache type="org.mybatis.caches.ehcache.LoggingEhcache"/>   -->
+	
+	<!-- 判断用户名和密码 -->
+	<select id="getUserInfo" parameterType="pd" resultType="pd" >
+		select 
+				USER_ID,	
+				USER_NAME,	
+				PASSWORD,	
+				NAME,	
+				SEX,	
+				TEL,	
+				STATUS,
+				IS_MAIN_COUNT,	
+				USER_TYPE,
+				DEALER_ID,
+				CREATE_BY,	
+				CREATE_DATE
+		from SYS_USER 
+		where STATUS=10021001
+		and AUDIT_STATUS=10141002
+		and USER_TYPE in(10131001,10131002,10131004)
+		<if test="userName != null and userName != ''">
+			and  USER_NAME=#{userName}
+		</if>
+		<if test="passwd != null and passwd != ''">
+			and  PASSWORD=#{passwd}
+		</if>
+	</select>
+	
+	<select id="getUserByUserId" parameterType="pd" resultType="pd">
+		select u.USER_ID,u.USER_NAME,u.`PASSWORD`,u.`NAME`
+		from sys_user u
+		where USER_ID=#{userId}
+	</select>
+	
+	<!-- 根据用户名获取用户的职位 -->
+	<select id="getUserPostList" parameterType="String"  resultType="pd">
+		SELECT P.POST_ID,SP.POST_NAME
+		FROM SYS_USER U,
+		SYS_USER_POST P,
+		SYS_POST SP
+		WHERE U.USER_ID=P.USER_ID AND P.POST_ID=SP.POST_ID
+		AND U.USER_NAME=#{postUserName}
+	</select>
+
+	<!-- 新增-->
+	<insert id="saveUserMsg" parameterType="User">
+		insert into SYS_USER(
+			<if test="DEALER_ID != null and DEALER_ID != ''">
+				DEALER_ID,
+			</if>
+			USER_ID,	
+			USER_NAME,	
+			PASSWORD,	
+			NAME,	
+			SEX,	
+			TEL,	
+			STATUS,	
+			CREATE_BY,	
+			CREATE_DATE,
+			AUDIT_STATUS,
+			REGISTER_DATE,
+			USER_TYPE,
+			IS_MAIN_COUNT,
+			CARNUM
+		) values (
+			<if test="DEALER_ID != null and DEALER_ID != ''">
+				#{DEALER_ID},
+			</if>
+			#{USER_ID},	
+			#{USER_NAME},	
+			#{PASSWORD},	
+			#{NAME},	
+			#{SEX},	
+			#{TEL},	
+			#{STATUS},	
+			#{CREATE_BY},	
+			#{CREATE_DATE},
+			#{AUDIT_STATUS},
+			#{REGISTER_DATE},
+			#{USER_TYPE},
+			#{IS_MAIN_COUNT},
+			#{CARNUM}
+		)
+	</insert>
+	
+	<!-- 添加用户和职位的关系 -->
+	<insert id="saveUserPostMsg" parameterType="pd">
+		insert into SYS_USER_POST(
+			USER_POST_ID,
+			USER_ID,
+			POST_ID,
+			CREATE_BY,
+			CREATE_DATE
+		) values(
+			#{userPostId},
+			#{userId},
+			#{postId},
+			#{userChinese},
+			#{whenCtr}
+		)
+	</insert>
+	
+	<!--修改用户 -->
+	<update  id="updateUserMsgOne" parameterType="User">
+		update  SYS_USER
+			set 
+				<if test="USER_NAME != null and USER_NAME != ''">
+					USER_NAME = #{USER_NAME},
+				</if>
+				<if test="PASSWORD != null and PASSWORD != ''">
+					PASSWORD = #{PASSWORD},
+				</if>
+				<if test="NAME != null and NAME != ''">
+					NAME = #{NAME},
+				</if>
+				<if test="TEL != null and TEL != ''">
+					TEL = #{TEL},
+				</if>
+				<if test="CARNUM != null and CARNUM != ''">
+					CARNUM = #{CARNUM},
+				</if>
+				<if test="DEALER_ID != null and DEALER_ID != ''">
+					DEALER_ID=#{DEALER_ID},
+				</if>
+				SEX = #{SEX},
+				STATUS = #{STATUS},
+				UPDATE_BY = #{UPDATE_BY},
+				UPDATE_DATE = #{UPDATE_DATE}
+			where 
+				USER_ID = #{USER_ID}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update  SYS_USER
+			set 
+				USER_ID = #{USER_ID},
+				USER_NAME = #{USER_NAME},
+				PASSWORD = #{PASSWORD},
+				NAME = #{NAME},
+				SEX = #{SEX},
+				TEL = #{TEL},
+				STATUS = #{STATUS},
+				CREATE_BY = #{CREATE_BY},
+				CREATE_DATE = #{CREATE_DATE},
+				UPDATE_BY = #{UPDATE_BY},
+				UPDATE_DATE = #{UPDATE_DATE},
+			USER_ID = USER_ID
+			where 
+				USER_ID = #{USER_ID}
+	</update>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+			USER_ID,	
+			USER_NAME,	
+			PASSWORD,	
+			NAME,	
+			SEX,	
+			TEL,	
+			STATUS,	
+			CREATE_BY,	
+			CREATE_DATE,	
+			UPDATE_BY,	
+			UPDATE_DATE,	
+			USER_ID
+		from 
+			SYS_USER
+		where 
+			USER_ID = #{USER_ID}
+	</select>
+	
+	<!-- 根据ID获取用户信息 -->
+	<select id="getUserMsgById" parameterType="pd" resultType="pd">
+		select 
+			u.USER_ID,
+			u.USER_NAME,
+			u.`PASSWORD`,
+			u.`NAME`,
+			u.SEX,
+			u.TEL,
+			u.`STATUS`,
+			u.CARNUM,
+			u.AUDIT_STATUS,
+			u.AUDIT_REMARK,
+			DATE_FORMAT(u.REGISTER_DATE,'%Y-%m-%d') REGISTER_DATE,
+			u.USER_TYPE,
+			u.IS_MAIN_COUNT,
+			u.DEALER_ID,
+			u.CREATE_BY,
+			u.CREATE_DATE,
+			u.UPDATE_BY,
+			u.UPDATE_DATE,
+			d.DEALER_NAME
+		from 
+			SYS_USER u left join base_dealer d on u.DEALER_ID=d.DEALER_ID
+		where 
+			u.USER_ID = #{userId}
+	</select>
+	
+	<!--  根据ID获取职位信息 -->
+	<select id="getUserPostById" parameterType="pd"  resultType="pd">
+		select P.POST_ID,P.POST_NAME
+		from sys_user_post u left join sys_post p on u.post_id=p.post_id
+		where u.user_id=#{userId}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="getUserlistPage"  parameterType="page"  resultType="pd">
+		SELECT
+			A.USER_ID,
+			A.USER_NAME,
+			A. PASSWORD,
+			A. NAME,
+			A.SEX SEX_STATUS,
+			a.IS_MAIN_COUNT,
+			D.DATA_NAME SEX,
+			S.DATA_NAME STATUS_NAME,
+			A.TEL,
+			A. STATUS,
+			A.CREATE_BY,
+			PJ.ORG_NAME,
+			PJ.POST_NAME,
+			DATE_FORMAT(a.CREATE_DATE, '%Y-%m-%d %H:%i:%s') CREATE_DATE,
+			case when a.USER_NAME='admin' then 1 else 0 end THIS_USER
+		FROM
+			SYS_USER a
+		LEFT JOIN sys_data d ON a.sex = d.data_key
+		INNER JOIN sys_data s ON a. STATUS = s.data_key
+		LEFT JOIN (
+			SELECT
+				GROUP_CONCAT(
+					CONCAT_WS(
+						',',
+						bo.org_name,
+						ds.dealer_name
+					)
+				) org_name,
+				sup.user_id,
+				ds.DEALER_ID,
+				GROUP_CONCAT(
+					CONCAT_WS(
+						',',
+						bo.ORG_ID,
+						ds.DEALER_ID
+					)
+				) ORG_ID,
+				queryChildrenAreaInfo((select ORG_ID from base_org where ORG_LEVEL=0 LIMIT 0,1)) ORG_STR,
+				GROUP_CONCAT(p.post_name) post_name
+			FROM
+				sys_user_post sup
+			INNER JOIN sys_post p ON sup.post_id = p.post_id
+			LEFT JOIN base_dealer ds ON p.org_id = ds.dealer_id
+			LEFT JOIN base_org bo ON p.org_id = bo.org_id
+			WHERE
+				p.post_status = 10021001
+			GROUP BY
+				sup.user_id
+		) pj  ON a.user_id = pj.user_id
+		WHERE 1=1
+		and a.STATUS = 10021001
+		<if test="pd.loginName != null and pd.loginName != ''">
+			and a.user_name LIKE CONCAT('%',#{pd.loginName},'%')
+		</if>
+		<if test="pd.chineName != null and pd.chineName != ''">
+			and a.name LIKE CONCAT('%',#{pd.chineName},'%')
+		</if>
+		<if test="pd.orgType != null and pd.orgType != ''">
+			and a.DEALER_ID = #{pd.orgType}
+		</if>
+		<if test="pd.sta == 10120002">
+			and a.DEALER_ID = #{pd.dealerId}
+			and a.USER_TYPE in(10131001,10131002,10131004)
+			<!-- 承运商有司机信息，所以用户管理里面不用看到司机 -->
+		</if>
+		order by a.CREATE_DATE desc
+	</select>
+	
+	<!-- 注册用户列表 -->
+	<select id="getRegistUserlistPage"  parameterType="page"  resultType="pd">
+		SELECT
+			u.USER_ID,
+			u.USER_NAME,
+			u.`NAME`,
+			u.SEX,
+			u.TEL,
+			u.AUDIT_STATUS,
+			u.USER_TYPE,
+			IS_MAIN_COUNT,
+			d.DEALER_NAME,
+			DATE_FORMAT(u.CREATE_DATE,'%Y-%m-%d') CREATE_DATE,
+			DATE_FORMAT(u.REGISTER_DATE,'%Y-%m-%d') REGISTER_DATE
+		FROM sys_user u left join base_dealer d on u.DEALER_ID=d.DEALER_ID
+		where u.`STATUS`=10021001
+		<if test="pd.userType != null and pd.userType != ''">
+			and u.USER_TYPE=#{pd.userType}
+		</if>
+		<if test="pd.userStatus != null and pd.userStatus != ''">
+			and u.AUDIT_STATUS=#{pd.userStatus}
+		</if>
+		<if test="pd.loginName != null and pd.loginName != ''">
+			and u.user_name LIKE CONCAT('%',#{pd.loginName},'%')
+		</if>
+		<if test="pd.chineName != null and pd.chineName != ''">
+			and u.name LIKE CONCAT('%',#{pd.chineName},'%')
+		</if>
+		and u.USER_TYPE != 10131001
+		order by u.AUDIT_STATUS,u.CREATE_DATE
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+				a.USER_ID,	
+				a.USER_NAME,	
+				a.PASSWORD,	
+				a.NAME,	
+				a.SEX,	
+				a.TEL,	
+				a.STATUS,	
+				a.CREATE_BY,	
+				a.CREATE_DATE,	
+				a.UPDATE_BY,	
+				a.UPDATE_DATE,	
+				a.USER_ID
+		from 
+				SYS_USER a
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from SYS_USER
+		where 
+			USER_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>	
+	
+	<!-- 根据userId 先删除关联的职位 -->
+	<delete id="deleteUserMsgOne" parameterType="User">
+		delete from sys_user_post
+		where 
+			USER_ID =#{USER_ID}
+	</delete>
+	
+	<!-- 检查用户名是否可用 -->
+	<select id="checkLoginName" parameterType="String"  resultType="pd">
+		select  user_name  from SYS_USER where user_name=#{LoginName}
+	</select>
+	
+	<!-- 查询首页总数 -->
+	<select id="searchIndexNumMsg" parameterType="pd" resultType="pd">
+		SELECT count(DISTINCT f.focus_id) FANS_NUM, 
+		count(DISTINCT case when  DATE_FORMAT(f.FOLLOW_DATE,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then f.FOCUS_ID else null END) FANS_NUM_ADD,
+		count(DISTINCT case when f.CANCLE_DATE is not null then f.focus_id else null end) CANCEL_FANS_NUM,
+		count(DISTINCT case when  DATE_FORMAT(f.CANCLE_DATE,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then f.FOCUS_ID else null END) CANCEL_FANS_ADD,
+		count(DISTINCT v.focus_id) CAR_NUM,
+		count(DISTINCT case when  DATE_FORMAT(v.bind_date,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then v.FOCUS_ID else null END) CAR_NUM_ADD,
+		count(DISTINCT o.ord_app_id) YY_NUM,
+		count(DISTINCT case when  DATE_FORMAT(o.create_date,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then o.ord_app_id else null END) YY_NUM_ADD,
+		 (SELECT   COUNT(DISTINCT t.SEND_ID)  FROM   tool_picmsg_send  t  WHERE   t.BUS_ID IS NULL
+			      and  EXISTS (
+					SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=t.DEALER_ID
+					<if test="orgId != null and orgId != ''">
+						<choose>
+							<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+							<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+							<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+							<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+						</choose>
+					</if>
+			 )
+			 AND T.SEND_STATUS= 10171001
+		    )    SEND_NUM,
+		 (SELECT   COUNT(DISTINCT case when DATE_FORMAT(t.CREATE_DATE,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then t.SEND_ID else null end)  FROM   tool_picmsg_send  t  WHERE   t.BUS_ID IS NULL
+			      and  EXISTS (
+					SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=t.DEALER_ID
+					<if test="orgId != null and orgId != ''">
+						<choose>
+							<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+							<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+							<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+							<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+						</choose>
+					</if>
+			 )
+			 AND T.SEND_STATUS= 10171001
+		    )    SEND_NUM_ADD,
+		  (
+		  	SELECT  COUNT(DISTINCT t.SESSION_ID)  FROM  tool_webchat_session  t  WHERE   EXISTS (
+				SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=t.DEALER_ID
+				<if test="orgId != null and orgId != ''">
+						<choose>
+							<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+							<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+							<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+							<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+						</choose>
+					</if>
+			)
+		  ) SESSION_NUM,
+		  (
+		  	SELECT  COUNT(DISTINCT case when DATE_FORMAT(t.CREATE_DATE,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then t.SESSION_ID else null end)  FROM  tool_webchat_session  t  WHERE   EXISTS (
+				SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=t.DEALER_ID
+				<if test="orgId != null and orgId != ''">
+						<choose>
+							<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+							<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+							<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+							<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+						</choose>
+					</if>
+			)
+		  ) SESSION_NUM_ADD,
+		  (
+		   SELECT  COUNT(DISTINCT Wj.DETAIL_ID)  FROM  WARN_JOB_DETAIL  wj INNER JOIN  cus_fans_focus cf ON cf.FOCUS_ID=wj.FOCUS_ID
+			AND  EXISTS (
+			SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=cf.DEALER_ID 
+			<if test="orgId != null and orgId != ''">
+						<choose>
+							<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+							<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+							<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+							<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+						</choose>
+			</if>
+			)
+			and wj.WARN_STATUS=10021001
+		  ) WARN_NUM,
+		  (
+		  SELECT  COUNT(DISTINCT case when DATE_FORMAT(wj.CREATE_DATE,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then wj.DETAIL_ID else null end)  FROM  WARN_JOB_DETAIL  wj INNER JOIN  cus_fans_focus cf ON cf.FOCUS_ID=wj.FOCUS_ID
+			AND  EXISTS (
+			SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=cf.DEALER_ID 
+			<if test="orgId != null and orgId != ''">
+						<choose>
+							<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+							<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+							<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+							<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+						</choose>
+			</if>
+			)
+			and wj.WARN_STATUS=10021001
+		  ) WARN_NUM_ADD,
+		<choose>
+			<when test="sta == 10120001">
+				(count(DISTINCT m.FEEDBACK)+(select count(1) from SUGGEST_MAIN where FEEDBACK_ORG = 10120001)) SUGG_NUM,
+				(count(DISTINCT case when  DATE_FORMAT(m.create_date,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then m.FEEDBACK else null END) +
+				(select count(1) from SUGGEST_MAIN where FEEDBACK_ORG = 10120001 and DATE_FORMAT(create_date,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d'))) SUGG_NUM_ADD,
+			</when>
+			<otherwise> 
+				count(DISTINCT m.FEEDBACK) SUGG_NUM,
+				count(DISTINCT case when  DATE_FORMAT(m.create_date,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then m.FEEDBACK else null END) SUGG_NUM_ADD,
+			</otherwise>
+		</choose>
+		<!-- 服务活动数 -->
+		(select COUNT(DISTINCT a.ACTIVITY_ID)
+		from ACTIVITY_MAIN a , ACTIVITY_DOWN_CHANNEL d,base_dealer b
+		where a.ACTIVITY_ID=d.ACTIVITY_ID and d.DEALER_ID=b.DEALER_ID
+		<if test="orgId != null and orgId != ''">
+			<choose>
+				<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+				<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+				<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+				<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+			</choose>
+		</if>
+		) SERV_NUM,
+		(select COUNT(DISTINCT case when DATE_FORMAT(d.CREATE_DATE,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then a.ACTIVITY_ID else null end) activi_num_day
+		from ACTIVITY_MAIN a , ACTIVITY_DOWN_CHANNEL d,base_dealer b
+		where a.ACTIVITY_ID=d.ACTIVITY_ID and d.DEALER_ID=b.DEALER_ID
+		<if test="orgId != null and orgId != ''">
+			<choose>
+				<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+				<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+				<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+				<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+			</choose>
+		</if>
+		) SERV_NUM_ADD
+		from base_dealer d left join CUS_FANS_FOCUS f on d.dealer_id=f.DEALER_ID 
+		left join CUS_FANS_VEHICLE_BIND v on  f.focus_id=v.focus_id and v.BIND_FLAG=10011001
+		left join ORD_APPLY o on d.dealer_id=o.dealer_id
+		left join SUGGEST_MAIN m on d.dealer_id=m.dealer_id
+		where d.status=11051002
+		<if test="orgId != null and orgId != ''">
+			<choose>
+				<when test="level == 0">  and d.O_ORG_ID=#{orgId} </when>
+				<when test="level == 1">  and d.T_ORG_ID=#{orgId} </when>
+				<when test="level == 2">  and d.ORG_ID=#{orgId} </when>
+				<otherwise>  and d.DEALER_ID=#{orgId}</otherwise>
+			</choose>
+		</if>
+	</select>
+	
+	<sql id="DEALER_ID_COM">
+		select  GROUP_CONCAT(ddd.DEALER_ID)
+		from base_dealer ddd 
+		where ddd.status=11051002
+		<if test="orgId != null and orgId != ''">
+			<choose>
+				<when test="level == 0">  and ddd.O_ORG_ID=#{orgId} </when>
+				<when test="level == 1">  and ddd.T_ORG_ID=#{orgId} </when>
+				<when test="level == 2">  and ddd.ORG_ID=#{orgId} </when>
+				<otherwise>  and ddd.DEALER_ID=#{orgId}</otherwise>
+			</choose>
+		</if>
+	</sql>
+	
+	<!-- 备用 未用 -->
+	<select id="getIndexMsgListLLLL" parameterType="pd" resultType="pd" statementType="CALLABLE">
+		{call icar.pro_calender(DATE_FORMAT(now(),'%Y-%m-%d'),#{dataNum},#{orgId},#{beginTime},#{endTime},#{sta})}
+	</select>
+	
+	<!-- 查询首页报表 -->
+	<select id="getIndexMsgList" parameterType="pd" resultType="pd">
+		SELECT
+			DATE_FORMAT(c.datelist,'%m-%d') AS D_DAY,
+			IFNULL(d.i_num,0) FANS_NUM,
+			IFNULL(z.o_num,0) CANCEL_NUM,
+			IFNULL(k.k_num,0) BIN_NUM,
+			<choose>
+				<when test="sta == 10120001">
+					(IFNULL(l.l_num,0)+(select count(1) from SUGGEST_MAIN where FEEDBACK_ORG = 10120001 and DATE_FORMAT(CREATE_DATE,'%Y-%m-%d')=DATE_FORMAT(c.datelist,'%Y-%m-%d'))) SUG_NUM,
+				</when>
+				<otherwise> 
+					IFNULL(l.l_num,0) SUG_NUM,
+				</otherwise>
+			</choose>
+			IFNULL(j.j_num,0) YY_NUM,
+			IFNULL(m.m_num,0) SERVER_NUM,
+			IFNULL(send.send_num,0) SEND_NUM,
+			IFNULL(session.session_num,0) SESSION_NUM,
+			IFNULL(warn.warn_num,0) WARN_NUM
+		FROM
+		(
+			select curdate() datelist
+			UNION 
+			select DATE_SUB(curdate(),INTERVAL 1 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 2 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 3 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 4 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 5 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 6 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 7 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 8 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 9 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 10 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 11 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 12 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 13 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 14 DAY)
+			union 
+			select DATE_SUB(curdate(),INTERVAL 15 DAY)
+		) c left join (
+		SELECT
+			FOLLOW_DATE,
+			count(distinct focus_id) i_num
+		FROM  CUS_FANS_FOCUS
+		WHERE DATE_FORMAT(FOLLOW_DATE,'%Y-%m-%d')  
+					BETWEEN STR_TO_DATE(#{beginTime},'%Y-%m-%d')  AND STR_TO_DATE(#{endTime},'%Y-%m-%d')
+		 			and FIND_IN_SET(DEALER_ID,(<include refid="DEALER_ID_COM" />))
+		GROUP BY  DATE_FORMAT(FOLLOW_DATE,'%y-%m-%d')
+		) d on DATE_FORMAT(c.datelist,'%y-%m-%d')=DATE_FORMAT(d.FOLLOW_DATE,'%y-%m-%d')
+		left join 
+		(
+		  SELECT
+				CANCLE_DATE,
+				count(DISTINCT focus_id) o_num
+			FROM CUS_FANS_FOCUS
+			WHERE
+				DATE_FORMAT(CANCLE_DATE, '%Y-%m-%d') BETWEEN STR_TO_DATE(#{beginTime}, '%Y-%m-%d') AND STR_TO_DATE(#{endTime}, '%Y-%m-%d')
+				and FIND_IN_SET(DEALER_ID,(<include refid="DEALER_ID_COM" />))
+			GROUP BY DATE_FORMAT(CANCLE_DATE, '%y-%m-%d')
+		) z on DATE_FORMAT(c.datelist, '%y-%m-%d') = DATE_FORMAT(z.CANCLE_DATE, '%y-%m-%d')
+		left join (
+			select  b.BIND_DATE,count(distinct cf.FOCUS_ID) k_num
+			from CUS_FANS_FOCUS cf ,CUS_FANS_VEHICLE_BIND b 
+			where cf.FOCUS_ID=b.FOCUS_ID
+				and DATE_FORMAT(b.BIND_DATE,'%Y-%m-%d')  
+					BETWEEN STR_TO_DATE(#{beginTime},'%Y-%m-%d') AND STR_TO_DATE(#{endTime},'%Y-%m-%d')
+				and b.BIND_STATUS=10021001
+				and b.BIND_FLAG=10011001
+				and FIND_IN_SET(cf.DEALER_ID,(<include refid="DEALER_ID_COM" />))
+			group by DATE_FORMAT(b.BIND_DATE,'%y-%m-%d')
+		) k on DATE_FORMAT(c.datelist,'%y-%m-%d')=DATE_FORMAT(k.BIND_DATE,'%y-%m-%d')
+		left join (
+			select sm.CREATE_DATE,count(distinct sm.FEEDBACK) l_num
+			from SUGGEST_MAIN sm 
+			WHERE  DATE_FORMAT(sm.CREATE_DATE,'%Y-%m-%d')  
+					BETWEEN STR_TO_DATE(#{beginTime},'%Y-%m-%d') AND STR_TO_DATE(#{endTime},'%Y-%m-%d')
+					and FIND_IN_SET(sm.DEALER_ID,(<include refid="DEALER_ID_COM" />))
+			group by DATE_FORMAT(sm.CREATE_DATE,'%y-%m-%d')
+		) l on DATE_FORMAT(c.datelist,'%y-%m-%d')=DATE_FORMAT(l.CREATE_DATE,'%y-%m-%d')
+		left join (
+			select o.CREATE_DATE,count(distinct o.ORD_APP_ID) j_num
+			from ORD_APPLY o 
+			where DATE_FORMAT(o.CREATE_DATE,'%Y-%m-%d')  
+				BETWEEN STR_TO_DATE(#{beginTime},'%Y-%m-%d') AND STR_TO_DATE(#{endTime},'%Y-%m-%d')
+				and FIND_IN_SET(o.DEALER_ID,(<include refid="DEALER_ID_COM" />))
+			group by DATE_FORMAT(o.CREATE_DATE,'%y-%m-%d')
+		) j on DATE_FORMAT(c.datelist,'%y-%m-%d')=DATE_FORMAT(j.CREATE_DATE,'%y-%m-%d')
+		left join (
+			select d.CREATE_DATE,COUNT(DISTINCT a.ACTIVITY_ID) m_num
+			from ACTIVITY_MAIN a , ACTIVITY_DOWN_CHANNEL d,base_dealer b
+			where a.ACTIVITY_ID=d.ACTIVITY_ID and d.DEALER_ID=b.DEALER_ID
+			and FIND_IN_SET(b.dealer_id,(<include refid="DEALER_ID_COM" />))
+			group by DATE_FORMAT(d.CREATE_DATE,'%y-%m-%d')
+		) m on DATE_FORMAT(c.datelist,'%y-%m-%d')=DATE_FORMAT(m.CREATE_DATE,'%y-%m-%d')
+		left join (
+		   SELECT  t.create_date, COUNT(t.send_id) send_num  FROM   tool_picmsg_send  t  WHERE   t.BUS_ID IS NULL
+			      and  EXISTS (
+					SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=t.DEALER_ID
+					and FIND_IN_SET(b.dealer_id,(<include refid="DEALER_ID_COM" />))
+			 )
+			and  DATE_FORMAT(t.CREATE_DATE,'%Y-%m-%d')  
+				BETWEEN STR_TO_DATE(#{beginTime},'%Y-%m-%d') AND STR_TO_DATE(#{endTime},'%Y-%m-%d')
+			 AND T.SEND_STATUS= 10171001
+			 group by DATE_FORMAT(t.CREATE_DATE,'%y-%m-%d')
+		)  send on DATE_FORMAT(c.datelist,'%y-%m-%d')=DATE_FORMAT(send.CREATE_DATE,'%y-%m-%d')
+		left  join (
+		   SELECT  t.CREATE_DATE,COUNT(DISTINCT t.SESSION_ID) session_num  FROM  tool_webchat_session  t  WHERE   EXISTS (
+				SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=t.DEALER_ID
+				and FIND_IN_SET(b.dealer_id,(<include refid="DEALER_ID_COM" />))
+			)
+			and  DATE_FORMAT(t.CREATE_DATE,'%Y-%m-%d')  
+				BETWEEN STR_TO_DATE(#{beginTime},'%Y-%m-%d') AND STR_TO_DATE(#{endTime},'%Y-%m-%d')
+			   group by DATE_FORMAT(t.CREATE_DATE,'%y-%m-%d')
+		) session on DATE_FORMAT(c.datelist,'%y-%m-%d')=DATE_FORMAT(session.CREATE_DATE,'%y-%m-%d')
+		left join (
+			SELECT  wj.CREATE_DATE,COUNT(DISTINCT wj.detail_id) warn_num   FROM  WARN_JOB_DETAIL  wj INNER JOIN  cus_fans_focus cf ON cf.FOCUS_ID=wj.FOCUS_ID
+				AND  EXISTS (
+				SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=cf.DEALER_ID 
+			    and FIND_IN_SET(b.dealer_id,(<include refid="DEALER_ID_COM" />))
+			)
+			and wj.WARN_STATUS=10021001
+			 and  DATE_FORMAT(wj.CREATE_DATE,'%Y-%m-%d')  
+					BETWEEN STR_TO_DATE(#{beginTime},'%Y-%m-%d') AND STR_TO_DATE(#{endTime},'%Y-%m-%d')
+			group by DATE_FORMAT(wj.CREATE_DATE,'%y-%m-%d')
+	    ) warn on DATE_FORMAT(c.datelist,'%y-%m-%d')=DATE_FORMAT(warn.CREATE_DATE,'%y-%m-%d')
+		order by c.datelist   
+	</select>
+	
+	<!-- 修改密码 -->
+	<select id="checkOldPass" parameterType="pd" resultType="pd">
+		select USER_ID from sys_user where USER_NAME=#{userName} and `PASSWORD`= #{oldPassword}
+	</select>
+	<update id="updatePassword" parameterType="pd">
+		update sys_user set `PASSWORD`=#{password} where USER_NAME=#{userName}
+	</update>
+	
+	<select id="gerUserByTime" parameterType="pd" resultType="pd">
+		SELECT
+			USER_ID,USER_NAME
+		FROM
+			sys_user
+		WHERE
+			DATE_FORMAT(CREATE_DATE,'%Y-%m-%d %k:%i') = #{nowTimes}
+	</select>
+	<update id="updateNewPassword" parameterType="pd">
+		update sys_user set PASSWORD=#{newPassword} where USER_ID = #{parKey}
+	</update>
+	<!-- 获取接入微信的服务站 -->
+	<select id="getAccessTokenSuccess" parameterType="pd" resultType="pd">
+			SELECT
+			count(b.DEALER_ID) DEALER,
+			count(
+				DISTINCT CASE
+				WHEN ba.DEALER_ID != '' THEN
+					ba.DEALER_ID
+				ELSE
+					''
+				END
+			) SUCCESS_DEALER
+		FROM
+			base_dealer b
+		LEFT JOIN base_accesstoken ba ON ba.DEALER_ID = b.DEALER_ID
+		WHERE  b.STATUS=11051002
+	</select>
+	<!-- 首页统计粉丝总数，当天关注数，取消关注数，当天取消关注总数 -->
+	<select id="getFansAllNum" parameterType="pd" resultType="pd">
+			SELECT
+			count( f.focus_id) FANS_NUM,
+			count(
+				CASE
+				WHEN DATE_FORMAT(f.FOLLOW_DATE, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d') THEN
+					f.FOCUS_ID
+				ELSE
+					NULL
+				END
+			) FANS_NUM_ADD,
+			count(
+				CASE
+				WHEN f.CANCLE_DATE IS NOT NULL THEN
+					f.focus_id
+				ELSE
+					NULL
+				END
+			) CANCEL_FANS_NUM,
+			count(
+				 CASE
+				WHEN DATE_FORMAT(f.CANCLE_DATE, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d') THEN
+					f.FOCUS_ID
+				ELSE
+					NULL
+				END
+			) CANCEL_FANS_ADD
+		
+		FROM
+			cus_fans_focus f
+			where 1=1 
+			AND  EXISTS (
+			SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=f.DEALER_ID 
+			<if test="orgId != null and orgId != ''">
+				<choose>
+					<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+					<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+					<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+					<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+				</choose>
+			</if>
+			)
+	</select>
+	<!-- 获取绑定数据 -->
+	<select id="getVehicleBindNum" parameterType="pd" resultType="pd">
+		SELECT
+			count( v.focus_id) CAR_NUM,
+			count(
+				 CASE
+				WHEN DATE_FORMAT(v.bind_date, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d') THEN
+					v.FOCUS_ID
+				ELSE
+					NULL
+				END
+			) CAR_NUM_ADD
+		
+		FROM
+			CUS_FANS_VEHICLE_BIND v
+			INNER JOIN  cus_fans_focus  c  ON  c.FOCUS_ID=v.FOCUS_ID 
+		WHERE 
+			v.BIND_FLAG = 10011001
+	   and  EXISTS (
+			SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=c.DEALER_ID 
+			<if test="orgId != null and orgId != ''">
+				<choose>
+					<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+					<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+					<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+					<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+				</choose>
+			</if>
+			)
+	</select>
+	<!-- 获取养修预约统计数据 -->
+	<select id="getordNum" parameterType="pd" resultType="pd">
+		SELECT
+			count(o.ord_app_id) YY_NUM,
+			count(
+				 CASE
+				WHEN DATE_FORMAT(o.create_date, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d') THEN
+					o.ord_app_id
+				ELSE
+					NULL
+				END
+			) YY_NUM_ADD
+		
+		FROM
+			ORD_APPLY o
+			where  1=1
+			 and  EXISTS (
+			SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=o.DEALER_ID 
+			<if test="orgId != null and orgId != ''">
+				<choose>
+					<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+					<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+					<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+					<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+				</choose>
+			</if>
+			)
+	</select>
+	<!-- 服务活动统计 -->
+	<select id="getactivityNum"  parameterType="pd" resultType="pd">
+			SELECT
+			COUNT(DISTINCT a.ACTIVITY_ID) SERV_NUM,
+			COUNT(
+				DISTINCT CASE
+				WHEN DATE_FORMAT(d.CREATE_DATE, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d') THEN
+					a.ACTIVITY_ID
+				ELSE
+					NULL
+				END
+			) SERV_NUM_ADD
+		FROM
+			ACTIVITY_MAIN a,
+			ACTIVITY_DOWN_CHANNEL d
+		WHERE
+			a.ACTIVITY_ID = d.ACTIVITY_ID
+		 and  EXISTS (
+			SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=d.DEALER_ID 
+			<if test="orgId != null and orgId != ''">
+				<choose>
+					<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+					<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+					<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+					<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+				</choose>
+			</if>
+			)
+	</select>
+	<!-- 意见反馈 -->
+	<select id="getSuggestNum" parameterType="pd" resultType="pd">
+	select 
+	<choose>
+			<when test="sta == 10120001">
+				(count( m.FEEDBACK)+(select count(1) from SUGGEST_MAIN where FEEDBACK_ORG = 10120001)) SUGG_NUM,
+				(count( case when  DATE_FORMAT(m.create_date,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then m.FEEDBACK else null END) +
+				(select count(1) from SUGGEST_MAIN where FEEDBACK_ORG = 10120001 and DATE_FORMAT(create_date,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d'))) SUGG_NUM_ADD
+			</when>
+			<otherwise> 
+				count( m.FEEDBACK) SUGG_NUM,
+				count( case when  DATE_FORMAT(m.create_date,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then m.FEEDBACK else null END) SUGG_NUM_ADD
+			</otherwise>
+		</choose>
+	        FROM  SUGGEST_MAIN m  where  1=1 
+	           and  EXISTS (
+			SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=m.DEALER_ID 
+			<if test="orgId != null and orgId != ''">
+				<choose>
+					<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+					<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+					<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+					<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+				</choose>
+			</if>
+			)
+	</select>
+	<!-- 群发消息 -->
+	<select id="getmessageSendNum" parameterType="pd" resultType="pd">
+	 SELECT   COUNT( t.SEND_ID) SEND_NUM,
+	 COUNT(DISTINCT case when DATE_FORMAT(t.CREATE_DATE,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then t.SEND_ID else null end)   SEND_NUM_ADD
+	  FROM   tool_picmsg_send  t  WHERE   t.BUS_ID IS NULL
+			      and  EXISTS (
+					SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=t.DEALER_ID
+					<if test="orgId != null and orgId != ''">
+						<choose>
+							<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+							<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+							<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+							<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+						</choose>
+					</if>
+			 )
+			 AND T.SEND_STATUS= 10171001
+	</select>
+	<!-- 微信会话 -->
+	<select id="getsessionNum" parameterType="pd" resultType="pd">
+	SELECT  COUNT(DISTINCT t.SESSION_ID) SESSION_NUM,
+	COUNT(DISTINCT case when DATE_FORMAT(t.CREATE_DATE,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then t.SESSION_ID else null end) SESSION_NUM_ADD
+	 FROM  tool_webchat_session  t  WHERE   EXISTS (
+				SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=t.DEALER_ID
+				<if test="orgId != null and orgId != ''">
+						<choose>
+							<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+							<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+							<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+							<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+						</choose>
+					</if>
+			)
+	</select>
+	 <!-- 自动提醒 -->
+	<select id="getWarnNum" resultType="pd" parameterType="pd">
+	  SELECT  COUNT(DISTINCT Wj.DETAIL_ID) WARN_NUM,
+	  COUNT(DISTINCT case when DATE_FORMAT(wj.CREATE_DATE,'%Y-%m-%d')=DATE_FORMAT(NOW(),'%Y-%m-%d') then wj.DETAIL_ID else null end) WARN_NUM_ADD
+	   FROM  WARN_JOB_DETAIL  wj INNER JOIN  cus_fans_focus cf ON cf.FOCUS_ID=wj.FOCUS_ID
+			AND  EXISTS (
+			SELECT  b.DEALER_ID FROM  base_dealer b WHERE  b.DEALER_ID=cf.DEALER_ID 
+			<if test="orgId != null and orgId != ''">
+						<choose>
+							<when test="level == 0">  and b.O_ORG_ID=#{orgId} </when>
+							<when test="level == 1">  and b.T_ORG_ID=#{orgId} </when>
+							<when test="level == 2">  and b.ORG_ID=#{orgId} </when>
+							<otherwise>  and b.DEALER_ID=#{orgId}</otherwise>
+						</choose>
+			</if>
+			)
+			and wj.WARN_STATUS=10021001
+	</select>
+	
+	<!-- 审核用户 -->
+	<update id="examineUser" parameterType="pd">
+		UPDATE sys_user
+			SET AUDIT_STATUS =#{auditStatus},
+			<if test="examineRemark != null and examineRemark != ''">
+			 	AUDIT_REMARK = #{examineRemark},
+			</if>
+			 AUDIT_DATE = now(),
+			 UPDATE_BY=#{userChinese},
+			 UPDATE_DATE=now()
+		WHERE USER_ID =#{userId}
+	</update>
+	
+	<select id="getDealerIdByUserId" parameterType="pd" resultType="pd">
+		select DEALER_ID from sys_user where USER_ID=#{userId}
+	</select>
+	
+	<update id="updateDealerStatusById" parameterType="pd">
+		update base_dealer set STATUS=10021001 where DEALER_ID=#{dealerStatusId}
+	</update>
+	
+	<select id="getOwnerFileImg" parameterType="pd" resultType="pd">
+		select
+			FILE_ID,FILE_NAME,URL
+		from e_files
+		where FILE_STATUS=10021001
+			and USE_TYPE=10181005
+			and FILE_TYPE=10171001
+			and OBJECT_ID=#{dealerId}
+		LIMIT 0,1
+	</select>
+	
+	<update id="updateUserImgFileStatus" parameterType="java.lang.Long">
+		update e_files set FILE_STATUS=10021002 where FILE_ID=#{fileId}
+	</update>
+	
+	<update id="updatePersonUserImgFileStatus" parameterType="pd">
+		update e_files set FILE_STATUS=10021002 
+		where FILE_ID in 
+		 <foreach collection="file_ids" item="file_id" close=")" open="(" separator=",">
+         	#{file_id}
+       </foreach>
+	</update>
+	
+	<select id="getFileImgList" parameterType="pd" resultType="pd">
+		select FILE_ID,FILE_NAME,URL,USE_TYPE,OBJECT_ID,USE_DETIAL_TYPE 
+		from e_files
+		where FILE_TYPE=10171001
+		and FILE_STATUS=10021001
+		and OBJECT_ID=#{userId}
+	</select>
+	
+	<select id="getCarMsg" parameterType="pd" resultType="pd">
+		SELECT  v.VEHICLE_ID,v.VIN,v.PLATE_NUM,v.MODEL_NAME,v.MODEL_CODE,v.STATUS,v.CAR_NUM
+		from E_USER_VEHICLE ev,e_vehicle v
+		where ev.VEHICLE_ID=v.VEHICLE_ID
+		and ev.USER_ID=#{userId}
+		LIMIT 0,1
+	</select>
+	
+	<update id="updateDealerStatus" parameterType="pd">
+		update base_dealer set `STATUS`=10021002 
+		where DEALER_ID=#{dealerId}
+	</update>
+	
+	<select id="getDealerIdByPostIds"  parameterType="java.lang.Long" resultType="java.lang.String">
+		select ORG_ID from sys_post where POST_ID=#{postArrPostId} LIMIT 0,1
+	</select>
+	
+	<select id="getButtonlistPage" parameterType="page" resultType="pd">
+		select BUT_NAME,BUT_CODE,BUT_VALUE,BUT_SORT from sys_button ORDER BY BUT_SORT
+	</select>
+	
+	<insert id="saveButton"  parameterType="pd">
+		INSERT INTO sys_button
+		(
+		  but_id,but_name,but_code,but_value,but_sort,create_by,create_date
+		)
+		values 
+		(
+		 getPrimary(),
+		 #{buttonName},
+		 #{buttonCode},
+		 #{buttonValue},
+		 (select MAX(b.but_sort)+1 from sys_button b where EXISTS(select 1 from sys_button c)),
+		 'admin',
+		 NOW()
+		)
+	</insert>
+	
+	<select id="getMenuList" resultType="pd">
+		select MENU_ID,MENU_NAME from sys_menu
+		where MENU_STATUS=10021001 and  PARENT_MENU_ID != -1
+	</select>
+	
+	<select id="getAllButtonList" resultType="pd">
+		select BUT_ID,BUT_NAME,BUT_CODE,BUT_VALUE from sys_button ORDER BY BUT_SORT
+	</select>
+	
+	<delete id="deleteButtonWithMenuById" parameterType="pd">
+		DELETE from sys_button_menu where menu_id=#{menuId}
+	</delete>
+	
+	<insert id="insertButtonWithMenuById" parameterType="pd">
+		INSERT into sys_button_menu(but_menu_id,but_id,menu_id,create_by,create_date,but_type)
+		values(getPrimary(),#{buttonId},#{menuId},'admin',now(),10120003)
+	</insert>
+	
+	<select id="driverInDealerlistPage" parameterType="page" resultType="pd">
+		SELECT
+			u.USER_ID,
+			u.USER_NAME,
+			u.`NAME`,
+			u.SEX,
+			u.TEL,
+			u.AUDIT_STATUS,
+			u.USER_TYPE,
+			u.IS_MAIN_COUNT,
+			DATE_FORMAT(u.CREATE_DATE,'%Y-%m-%d') CREATE_DATE,
+			DATE_FORMAT(u.REGISTER_DATE,'%Y-%m-%d') REGISTER_DATE
+		from sys_user u
+		where u.`STATUS`=10021001 
+		and u.USER_TYPE in(10131003,10131005)
+		and u.DEALER_ID=#{pd.dealerId}
+		<if test="pd.loginName != null and pd.loginName != ''">
+			and u.user_name LIKE CONCAT('%',#{pd.loginName},'%')
+		</if>
+		<if test="pd.chineName != null and pd.chineName != ''">
+			and u.name LIKE CONCAT('%',#{pd.chineName},'%')
+		</if>
+		<if test="pd.userStatus != null and pd.userStatus != ''">
+			and u.AUDIT_STATUS=#{pd.userStatus}
+		</if>
+		ORDER BY u.REGISTER_DATE DESC	
+	</select>
+	
+	<select id="getPersonOwnerFileImg" parameterType="pd" resultType="pd">
+		select
+			FILE_ID,FILE_NAME,URL,USE_DETIAL_TYPE
+		from e_files
+		where FILE_STATUS=10021001
+			and USE_TYPE=10181001
+			and FILE_TYPE=10171001
+			and OBJECT_ID=#{dealerId}
+	</select>
+	
+</mapper>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body style="background-image: url(images/bei.png);background-repeat: no-repeat;background-size:cover;" onload="checkBrower()">
+<div style="width: 100%;text-align: center;">
+	<div style="height: 300px;"></div>
+	<img src="images/sign.png"  style="max-width: 120%;"/>
+	<br />
+	<div style="height: 200px;"></div>
+	<img src="images/anzhuo1.png"  onclick="downloadApkOwner()"/>
+	<br />
+	<div style="height: 60px;"></div>
+	<img src="images/ios1.png"  onclick="downloadIosOwner()"/>
+</div>
+</body>
+<script type="text/javascript">
+//货主apk下载
+function downloadApkOwner(){
+	 window.location.href = 'eych.apk';
+}
+//货主IOS下载
+function downloadIosOwner() {
+	 window.location.href = 'https://itunes.apple.com/cn/app/id1061880281';
+}
+
+ function checkBrower() {
+    if(isWeiXin()){ 
+		 alert("请点击右上角按钮，选择浏览器打开");
+   }
+ }
+ function isWeiXin(){ 
+	 var ua = window.navigator.userAgent.toLowerCase(); 
+	 if(ua.match(/MicroMessenger/i) == 'micromessenger'){ 
+	 return true; 
+	 }else{ 
+	 return false; 
+	 } 
+	 } 
+</script>
+</html>

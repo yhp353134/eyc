@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CommonMapper">
+	<resultMap type="SysData" id="SysDataResultMap">
+		<id column="DATA_KEY" property="datakey" />
+		<result column="DATA_NAME" property="dataname" />
+		<result column="DATA_GROUP" property="datagroup" />
+		<result column="GROUP_NAME" property="groupname" />
+	</resultMap>
+
+	<!-- 根据DATA_GROUP查询列表数据 -->
+	<select id="getSysDataCodeByCodeType" parameterType="pd"
+		resultType="pd">
+		select d.* from sys_data d where d.DATA_GROUP=#{DATA_GROUP}
+		<if test="DATA_KEY != null and DATA_KEY!=''">
+			and d.data_key not in
+			<foreach item="item" index="index" collection="DATA_KEY"
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		ORDER BY DATA_KEY
+	</select>
+	<!-- 查询品牌、车系、车型 -->
+	<select id="getAutoMatList" parameterType="pd" resultType="pd">
+		 select  ID,`CODE`,`NAME`
+		from E_AUTO_MAT
+		where `LEVEL`=#{matLevel}
+		<if test="matParentId != null and matParentId !=''">
+			and parent_id=#{matParentId}
+		</if>
+	</select>
+	
+	<select id="getProvinceList"  resultType="pd">
+		select REGION_CODE,REGION_NAME
+		from e_region where type=10291001
+	</select>
+	
+	<select id="getCityByProovinceId"  parameterType="pd"  resultType="pd">
+		 select REGION_CODE,REGION_NAME 
+		 from e_region 
+		 where TYPE=10291002 and PARENT_CODE=#{provinceId}
+	</select>
+	
+	<!-- BASE_ORG查询大区区域列表数据 -->
+	<select id="getBaseOrg" parameterType="pd" resultType="pd">
+		select o.* from base_org o where o.ORG_LEVEL=1;
+	</select>
+	<!-- BASE_ORG查询片区列表数据 -->
+	<select id="getBaseOrgCity" parameterType="pd" resultType="pd">
+		select o.* from base_org o where o.ORG_LEVEL=2;
+	</select>
+	<!-- BASE_ORG根据机构ID查询父级机构信息 -->
+	<select id="getParentOrgByOrgId" parameterType="String"
+		resultType="pd">
+		SELECT a.*
+		FROM base_org a
+		INNER JOIN base_org b on a.org_id = b.parent_org_id
+		where b.org_id = #{ORG_ID}
+	</select>
+	<!-- base_dealer查询经销商数据 -->
+	<select id="getBaseDealer" parameterType="pd" resultType="pd">
+		SELECT
+		b.DEALER_ID,
+		b.DEALER_CODE,
+		b.DEALER_NAME,
+		b.ACCESSTOKEN,
+		b.APP_ID,
+		b.COMPANY_INFO,
+		b.TOKEN_TIME,
+		b.APPSECRET,
+		b.TOKEN,
+		b.WECHAT_ID
+		FROM
+		base_dealer b where b.status=11051002
+	</select>
+
+
+	<!-- base_dealer根据用户名查询经销商数据 -->
+	<resultMap id="BaseResultMap" type="com.fh.entity.organization.BaseDealer">
+		<id column="DEALER_ID" jdbcType="BIGINT" property="dealerId" />
+		<result column="O_ORG_ID" jdbcType="BIGINT" property="oOrgId" />
+		<result column="O_ORG_CODE" jdbcType="VARCHAR" property="oOrgCode" />
+		<result column="O_ORG_NAME" jdbcType="VARCHAR" property="oOrgName" />
+		<result column="T_ORG_ID" jdbcType="BIGINT" property="tOrgId" />
+		<result column="T_ORG_CODE" jdbcType="VARCHAR" property="tOrgCode" />
+		<result column="T_ORG_NAME" jdbcType="VARCHAR" property="tOrgName" />
+		<result column="ORG_NAME" jdbcType="VARCHAR" property="orgName" />
+		<result column="ORG_ID" jdbcType="BIGINT" property="orgId" />
+		<result column="ORG_CODE" jdbcType="VARCHAR" property="orgCode" />
+		<result column="DEALER_CODE" jdbcType="VARCHAR" property="dealerCode" />
+		<result column="DEALER_NAME" jdbcType="VARCHAR" property="dealerName" />
+		<result column="LINKMAN" jdbcType="VARCHAR" property="linkman" />
+		<result column="LINKTEL" jdbcType="VARCHAR" property="linktel" />
+		<result column="EMAIL" jdbcType="VARCHAR" property="email" />
+		<result column="FAX" jdbcType="VARCHAR" property="fax" />
+		<result column="HELP_TEL" jdbcType="VARCHAR" property="helpTel" />
+		<result column="ORDER_TEL" jdbcType="VARCHAR" property="orderTel" />
+		<result column="ADDRESS" jdbcType="VARCHAR" property="address" />
+		<result column="LONGITUDE" jdbcType="VARCHAR" property="longitude" />
+		<result column="LATITUDE" jdbcType="VARCHAR" property="latitude" />
+		<result column="STATUS" jdbcType="INTEGER" property="status" />
+		<result column="ORDER_DISCOUNT" jdbcType="VARCHAR" property="orderDiscount" />
+		<result column="QRCODE_URL" jdbcType="VARCHAR" property="qrcodeUrl" />
+		<result column="APP_ID" jdbcType="VARCHAR" property="appId" />
+		<result column="APPSECRET" jdbcType="VARCHAR" property="appsecret" />
+		<result column="TOKEN" jdbcType="VARCHAR" property="token" />
+		<result column="WECHAT_ID" jdbcType="VARCHAR" property="wechatId" />
+		<result column="COMPANY_INFO" jdbcType="VARCHAR" property="companyInfo" />
+		<result column="ACCESSTOKEN" jdbcType="VARCHAR" property="accesstoken" />
+		<result column="TOKEN_TIME" jdbcType="TIMESTAMP" property="tokenTime" />
+		<result column="TICKET_TIME" jdbcType="TIMESTAMP" property="ticketTime" />
+		<result column="JSAPI_TICKET" jdbcType="VARCHAR" property="jsapiTicket" />
+		<result column="WECHAT_MENU_STATUS" jdbcType="INTEGER"
+			property="wechatMenuStatus" />
+		<result column="WECHAT_MENU_TIME" jdbcType="TIMESTAMP"
+			property="wechatMenuTime" />
+		<result column="CREATE_BY" jdbcType="VARCHAR" property="createBy" />
+		<result column="CREATE_DATE" jdbcType="TIMESTAMP" property="createDate" />
+		<result column="UPDATE_BY" jdbcType="VARCHAR" property="updateBy" />
+		<result column="UPDATE_DATE" jdbcType="TIMESTAMP" property="updateDate" />
+		<result column="WORK_BEGIN" jdbcType="VARCHAR" property="workBegin" />
+		<result column="WORK_END" jdbcType="VARCHAR" property="workEnd" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		DEALER_ID, O_ORG_ID, O_ORG_CODE, O_ORG_NAME, T_ORG_ID, T_ORG_CODE, T_ORG_NAME,
+		ORG_NAME,
+		ORG_ID, ORG_CODE, DEALER_CODE, DEALER_NAME, LINKMAN, LINKTEL, EMAIL, FAX,
+		HELP_TEL,
+		ORDER_TEL, ADDRESS, LONGITUDE, LATITUDE, STATUS, ORDER_DISCOUNT, QRCODE_URL,
+		APP_ID,
+		APPSECRET, TOKEN, WECHAT_ID, COMPANY_INFO, ACCESSTOKEN, TOKEN_TIME, TICKET_TIME,
+		JSAPI_TICKET, WECHAT_MENU_STATUS, WECHAT_MENU_TIME, CREATE_BY,
+		CREATE_DATE, UPDATE_BY,
+		UPDATE_DATE, WORK_BEGIN, WORK_END
+	</sql>
+	<select id="getBaseDealerByUserName" parameterType="pd"
+		resultMap="BaseResultMap">
+		SELECT
+		<include refid="Base_Column_List" />
+		FROM
+		sys_user su,
+		sys_user_post sup,
+		BASE_DEALER BD
+		WHERE
+		su.USER_ID = sup.USER_ID
+		AND sup.DEALER_ID = BD.DEALER_ID
+		AND su.USER_NAME = #{USER_NAME}
+	</select>
+
+	<!-- 获取文件信息 -->
+	<select id="getFileByObject" parameterType="pd" resultType="pd">
+		SELECT
+		FILE_ID,
+		BUS_POINT,
+		BUS_ID,
+		FILE_TYPE,
+		FILE_URL,
+		FILE_NAME
+		FROM
+		COM_FILE
+		<where>
+			<trim prefix="(" suffix=")" prefixOverrides="and">
+				<if test="BUS_POINT != null and BUS_POINT != ''">
+					AND BUS_POINT = #{BUS_POINT}
+				</if>
+				<if test="BUS_ID != null and BUS_ID != ''">
+					AND BUS_ID = #{BUS_ID}
+				</if>
+				<if test="FILE_TYPE != null and FILE_TYPE != ''">
+					AND FILE_TYPE = #{FILE_TYPE}
+				</if>
+			</trim>
+		</where>
+	</select>
+
+	<!-- BASE_ORG查询所有大区片区结构列表 -->
+	<select id="getAllBaseOrg" parameterType="pd" resultType="pd">
+		SELECT
+		*
+		FROM
+		base_org
+		WHERE
+		1 = 1
+		AND FIND_IN_SET(
+		ORG_ID,
+		queryChildrenAreaInfo (#{org_id})
+		)
+		ORDER BY
+		ORG_LEVEL
+	</select>
+
+	<!-- BASE_ORG查询大区区域列表数据 用于组建大区树形结构 -->
+	<select id="getChooseBaseOrg" parameterType="pd" resultType="pd">
+		SELECT
+		*
+		FROM
+		base_org
+		WHERE
+		1 = 1
+		AND FIND_IN_SET(
+		ORG_ID,
+		queryChildrenAreaInfo (#{org_id})
+		)
+		<if test="org_level != null and org_level != ''">
+			and ORG_LEVEL in(0,1)
+		</if>
+		ORDER BY
+		ORG_LEVEL
+
+	</select>
+
+	<!-- 查询机构ID下的经销商 -->
+	<select id="getDealerlistPage" parameterType="page" resultType="pd">
+		SELECT
+		d.DEALER_ID,
+		o.PARENT_ORG_ID,
+		d.ORG_ID,
+		o.ORG_NAME,
+		d.DEALER_CODE,
+		d.DEALER_NAME,
+		d.LINKMAN,
+		d.LINKTEL
+		FROM
+		base_dealer d, base_org o
+		WHERE d.ORG_ID = o.ORG_ID 
+		and d.STATUS = 10021001
+		<if test="pd.org_id != null and pd.org_id != ''"><!-- 按片区查询 -->
+			and d.ORG_ID = #{pd.org_id}
+		</if>
+		<if test="pd.parent_org_id != null and pd.parent_org_id != ''"><!-- 按大区查询 -->
+			and o.PARENT_ORG_ID = #{pd.parent_org_id}
+		</if>
+		<if test="pd.KEYW != null and pd.KEYW != ''"><!-- 关键词检索 -->
+			and
+			(
+			d.DEALER_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+			or
+			d.LINKMAN LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+			or
+			d.LINKTEL LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+			)
+		</if>
+	</select>
+
+	<!-- 查询大区下的片区机构 -->
+	<select id="getOrglistPage" parameterType="page" resultType="pd">
+		SELECT
+		o.ORG_ID,
+		o.ORG_CODE,
+		o.ORG_NAME,
+		b.ORG_NAME AS PARENT_ORG_NAME,
+		o.ORG_LEVEL
+		FROM
+		base_org o
+		LEFT JOIN base_org b ON o.PARENT_ORG_ID = b.ORG_ID
+		WHERE
+		1=1
+		<if test="pd.allDQ != null and pd.allDQ != ''">
+			and EXISTS (SELECT 1 FROM base_org bo WHERE
+			FIND_IN_SET(bo.ORG_ID,queryChildrenAreaInfo (#{pd.allDQ})) AND
+			bo.ORG_LEVEl in (0,1) AND o.ORG_ID = bo.ORG_ID)
+		</if>
+		<if test="pd.org_level != null and pd.org_level != ''">
+			and o.ORG_LEVEL = #{pd.org_level}
+		</if>
+		<if test="pd.org_id != null and pd.org_id != ''"><!-- 按片区查询 -->
+			and o.ORG_ID = #{pd.org_id}
+		</if>
+		<if test="pd.parent_org_id != null and pd.parent_org_id != ''"><!-- 按大区查询 -->
+			and o.PARENT_ORG_ID = #{pd.parent_org_id}
+		</if>
+		<if test="pd.KEYW != null and pd.KEYW != ''"><!-- 关键词检索 -->
+			and o.ORG_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+		</if>
+		ORDER BY o.ORG_LEVEL
+	</select>
+
+	<!-- BASE_ORG查询机构ID下的经销商ID -->
+	<select id="getDealerIdListByOrgId" parameterType="pd"
+		resultType="java.lang.String">
+		SELECT
+		d.DEALER_ID
+		FROM
+		base_dealer d, base_org o
+		WHERE
+		d.ORG_ID = o.ORG_ID and
+		d.STATUS = 11051002
+		<if test="org_id != null and org_id != ''"><!-- 按片区查询 -->
+			and d.ORG_ID = #{org_id}
+		</if>
+		<if test="parent_org_id != null and parent_org_id != ''"><!-- 按大区查询 -->
+			and o.PARENT_ORG_ID = #{parent_org_id}
+		</if>
+		<if test="KEYW != null and KEYW != ''"><!-- 关键词检索 -->
+			and
+			(
+			d.DEALER_NAME LIKE CONCAT(CONCAT('%', #{KEYW}),'%')
+			or
+			d.LINKMAN LIKE CONCAT(CONCAT('%', #{KEYW}),'%')
+			or
+			d.LINKTEL LIKE CONCAT(CONCAT('%', #{KEYW}),'%')
+			)
+		</if>
+
+	</select>
+
+	<!-- 查询片区或大区下的经销商ID，和片区或大区的机构id -->
+	<select id="getDelaerAndOrg" parameterType="pd" resultType="java.lang.String">
+		<if test="unionAll != null">
+			SELECT
+			ORG_ID OBJECT_ID
+			FROM
+			base_org
+			WHERE
+			<if test="parent_org_id != null and parent_org_id != ''"><!-- 按大区查询 -->
+				PARENT_ORG_ID = #{parent_org_id}
+			</if>
+			UNION ALL
+		</if>
+		SELECT
+		d.DEALER_ID OBJECT_ID
+		FROM
+		base_dealer d, base_org o
+		WHERE
+		d.ORG_ID = o.ORG_ID and
+		d.STATUS = 11051002
+		<if test="org_id != null and org_id != ''"><!-- 按片区查询 -->
+			and d.ORG_ID = #{org_id}
+		</if>
+		<if test="parent_org_id != null and parent_org_id != ''"><!-- 按大区查询 -->
+			and o.PARENT_ORG_ID = #{parent_org_id}
+		</if>
+	</select>
+
+	<!-- 根据机构数组获取经销商ID -->
+	<select id="getDelaerByOrgArr" parameterType="pd" resultType="pd">
+		SELECT
+		d.DEALER_ID,
+		d.APP_ID
+		FROM
+		base_dealer d, base_org o
+		WHERE
+		d.ORG_ID = o.ORG_ID and
+		d.STATUS = 11051002
+		<trim prefix="AND (" suffix=")" prefixOverrides="OR">
+			<if test="org_id != null and org_id != ''"><!-- 按片区查询 -->
+				<foreach collection="org_id" item="item" open="OR o.ORG_ID IN("
+					separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="parent_org_id != null and parent_org_id != ''"><!-- 按大区查询 -->
+				<foreach collection="parent_org_id" item="item"
+					open="OR o.PARENT_ORG_ID IN(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+		</trim>
+	</select>
+
+	<!-- 根据机构ID获取机构信息 -->
+	<resultMap id="BaseOrgResultMap" type="com.fh.entity.organization.BaseOrg">
+		<id column="ORG_ID" property="orgId" jdbcType="VARCHAR" />
+		<result column="ORG_CODE" property="orgCode" jdbcType="VARCHAR" />
+		<result column="ORG_NAME" property="orgName" jdbcType="VARCHAR" />
+		<result column="ORG_LEVEL" property="orgLevel" jdbcType="INTEGER" />
+		<result column="PARENT_ORG_ID" property="parentOrgId" jdbcType="VARCHAR" />
+		<result column="FIRST_PINYIN" property="firstPinyin" jdbcType="VARCHAR" />
+		<result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+		<result column="CREATE_DATE" property="createDate" jdbcType="TIMESTAMP" />
+		<result column="UPDATE_BY" property="updateBy" jdbcType="VARCHAR" />
+		<result column="UPDATE_DATE" property="updateDate" jdbcType="TIMESTAMP" />
+	</resultMap>
+	<sql id="Base_Org_Column_List">
+		ORG_ID, ORG_CODE, ORG_NAME, ORG_LEVEL, PARENT_ORG_ID, FIRST_PINYIN,
+		CREATE_BY, CREATE_DATE,
+		UPDATE_BY, UPDATE_DATE
+	</sql>
+	<select id="getOrgByOrgId" parameterType="pd" resultMap="BaseOrgResultMap">
+		select
+		<include refid="Base_Org_Column_List" />
+		from BASE_ORG
+		WHERE ORG_ID = #{org_id}
+	</select>
+
+	<!-- 获取标签列表 -->
+	<select id="getLabelList" parameterType="pd" resultType="pd">
+		SELECT CFF.LABEL_ID, CFF.LABEL_NAME, CFF.DEALER_ID
+		FROM CUS_FANS_LABEL
+		CFF
+		INNER JOIN base_dealer BD ON BD.DEALER_ID = CFF.DEALER_ID
+		<where>
+			<choose>
+				<when test="ORG_LEVEL eq 1"> <!-- 大区 -->
+					BD.T_ORG_ID = #{DEALER_ID}
+				</when>
+				<when test="ORG_LEVEL eq 2"> <!-- 片区 -->
+					BD.ORG_ID = #{DEALER_ID}
+				</when>
+				<when test="ORG_LEVEL eq 4"> <!-- 服务站 -->
+					BD.DEALER_ID = #{DEALER_ID}
+				</when>
+			</choose>
+		</where>
+	</select>
+
+	<!-- 插入文件信息记录 -->
+	<insert id="insertFileSelective" parameterType="com.fh.entity.file.ComFile">
+		insert into com_file
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="fileId != null">
+				FILE_ID,
+			</if>
+			<if test="busPoint != null">
+				BUS_POINT,
+			</if>
+			<if test="busId != null">
+				BUS_ID,
+			</if>
+			<if test="fileType != null">
+				FILE_TYPE,
+			</if>
+			<if test="fileUrl != null">
+				FILE_URL,
+			</if>
+			<if test="fileName != null">
+				FILE_NAME,
+			</if>
+			<if test="createBy != null">
+				CREATE_BY,
+			</if>
+			<if test="createDate != null">
+				CREATE_DATE,
+			</if>
+			<if test="updateBy != null">
+				UPDATE_BY,
+			</if>
+			<if test="updateDate != null">
+				UPDATE_DATE,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="fileId != null">
+				#{fileId,jdbcType=VARCHAR},
+			</if>
+			<if test="busPoint != null">
+				#{busPoint,jdbcType=INTEGER},
+			</if>
+			<if test="busId != null">
+				#{busId,jdbcType=VARCHAR},
+			</if>
+			<if test="fileType != null">
+				#{fileType,jdbcType=INTEGER},
+			</if>
+			<if test="fileUrl != null">
+				#{fileUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="fileName != null">
+				#{fileName,jdbcType=VARCHAR},
+			</if>
+			<if test="createBy != null">
+				#{createBy,jdbcType=VARCHAR},
+			</if>
+			<if test="createDate != null">
+				#{createDate,jdbcType=TIMESTAMP},
+			</if>
+			<if test="updateBy != null">
+				#{updateBy,jdbcType=VARCHAR},
+			</if>
+			<if test="updateDate != null">
+				#{updateDate,jdbcType=TIMESTAMP},
+			</if>
+		</trim>
+	</insert>
+
+	<!-- 根据PrimaryKey更新文件表 -->
+	<update id="updateComFileByPrimaryKey" parameterType="com.fh.entity.file.ComFile">
+		update com_file
+		<set>
+			<if test="busPoint != null">
+				BUS_POINT = #{busPoint,jdbcType=INTEGER},
+			</if>
+			<if test="busId != null">
+				BUS_ID = #{busId,jdbcType=VARCHAR},
+			</if>
+			<if test="fileType != null">
+				FILE_TYPE = #{fileType,jdbcType=INTEGER},
+			</if>
+			<if test="fileUrl != null">
+				FILE_URL = #{fileUrl,jdbcType=VARCHAR},
+			</if>
+			<if test="fileName != null">
+				FILE_NAME = #{fileName,jdbcType=VARCHAR},
+			</if>
+			<if test="createBy != null">
+				CREATE_BY = #{createBy,jdbcType=VARCHAR},
+			</if>
+			<if test="createDate != null">
+				CREATE_DATE = #{createDate,jdbcType=TIMESTAMP},
+			</if>
+			<if test="updateBy != null">
+				UPDATE_BY = #{updateBy,jdbcType=VARCHAR},
+			</if>
+			<if test="updateDate != null">
+				UPDATE_DATE = #{updateDate,jdbcType=TIMESTAMP},
+			</if>
+		</set>
+		where FILE_ID = #{fileId,jdbcType=VARCHAR}
+	</update>
+
+
+	<update id="update" parameterType="pd">
+		update base_org o set
+		o.ORG_NAME = '川渝大区测试' where o.ORG_ID=#{org_id}
+	</update>
+
+	<delete id="delete" parameterType="pd">
+		delete from base_org
+		where
+		ORG_ID = #{org_id}
+	</delete>
+
+	<select id="getBaseDealerByDealerId" parameterType="pd"
+		resultType="pd">
+		SELECT
+		b.DEALER_ID,
+		b.DEALER_CODE,
+		b.DEALER_NAME,
+		b.ACCESSTOKEN,
+		b.APP_ID,
+		b.COMPANY_INFO,
+		b.TOKEN_TIME,
+		b.O_ORG_NAME,
+		b.T_ORG_NAME,
+		b.ORG_NAME,
+		b.APPSECRET,
+		b.TOKEN,
+		b.WECHAT_ID
+		FROM
+		base_dealer b
+		where b.status=11051002
+		<!-- 经销商 -->
+		<if test="DEALER_ID != null and DEALER_ID !=''">
+			and b.dealer_id = #{DEALER_ID}
+		</if>
+	</select>
+	<!-- 根据appid获取经销商信息 -->
+	<select id="getBaseDealerByAppId" parameterType="pd" resultType="pd">
+		SELECT
+		b.DEALER_ID,
+		b.DEALER_CODE,
+		b.DEALER_NAME,
+		b.ACCESSTOKEN,
+		b.APP_ID,
+		b.COMPANY_INFO,
+		b.TOKEN_TIME,
+		b.O_ORG_NAME,
+		b.T_ORG_NAME,
+		b.ORG_NAME,
+		b.APPSECRET,
+		b.TOKEN,
+		b.DEALER_fULL_NAME,
+		b.WECHAT_NAME,
+		b.WECHAT_ID
+		FROM
+		base_dealer b
+		where b.status=11051002
+		<!-- appid -->
+		<if test="APP_ID != null and APP_ID !=''">
+			and b.APP_ID = #{APP_ID}
+		</if>
+	</select>
+	<!-- 查询机构 -->
+	<select id="getBaseOrgByOrgId" parameterType="pd" resultType="pd">
+		SELECT
+		o.ORG_CODE,
+		o.ORG_ID,
+		o.ORG_NAME,
+		o.ORG_LEVEL,
+		o.PARENT_ORG_ID
+		FROM
+		base_org o
+		where o.org_id = #{ORG_ID}
+	</select>
+
+	<!-- 获取所有的文件路径及文件名并分组 -->
+	<select id="getToolSrcImgGroupUrl" parameterType="pd"
+		resultType="String">
+		SELECT
+		GROUP_CONCAT(FILE_URL) FILE_URLS
+		FROM
+		TOOL_SRC_IMAGE
+	</select>
+
+	<!-- 通过List循环批量插入本地文件信息 -->
+	<insert id="insertToolSrcImgByList" parameterType="pd">
+		INSERT INTO tool_src_image (IMAGE_ID, FILE_TYPE, FILE_NAME, FILE_URL,
+		CREATE_BY, CREATE_DATE)
+		VALUES
+		<foreach collection="filePathInfoList" item="item" separator=",">
+			(#{item.IMAGE_ID},#{item.FILE_TYPE},#{item.FILE_NAME},#{item.FILE_URL},#{CREATE_BY},#{CREATE_DATE})
+		</foreach>
+	</insert>
+
+	<!-- 查询数据字典 -->
+	<select id="getSysDataCode" parameterType="pd" resultMap="SysDataResultMap">
+		SELECT data_name,data_key,data_group,group_name FROM sys_data
+	</select>
+	
+	<insert id="insertMaMsg" parameterType="pd">
+		insert into ma_msg
+		(
+			MSG_ID,MSG_TYPE,MSG_TITLE,MSG_CONTENT,SEND_TIME,END_TIME,SEND_USER,SEND_NAME,
+			<if test="msgUserType != null and msgUserType != ''">
+				USER_TYPE,
+			</if>
+			RANGE_FLAG 
+		) VALUES(
+			#{msgId},
+			10251002,
+			#{msgTitle},
+			#{msgContent},
+			now(),
+			now(),
+			179122215111000001,
+			'admin',
+			<if test="msgUserType != null and msgUserType != ''">
+				#{msgUserType},
+			</if>
+		    #{rangFlag}
+		)	
+	</insert>
+	<insert id="insertMaMsgReceive" parameterType="pd">
+		insert into ma_msg_receive 
+		(MSG_RECEIVE_ID,MSG_ID,USER_ID,USER_NAME,MSG_CONTENT,RECEIVE_TIME)
+		VALUES
+		(#{msgSmallId},#{msgId},#{receiveUserId},#{receiveUserName},#{msgContent},NOW())
+	</insert>
+	
+	<!-- 根据起始目的城市id查询匹配的司机 -->
+	<select id="getDriverListByBeginAndEndLine"  parameterType="pd" resultType="pd">
+	   select  u.USER_ID,u.NAME,e.SRC_CITY,e.DES_CITY  
+	   from e_line e  inner join E_VEHICLE  ev on  ev.VEHICLE_ID=e.VEHICLE_ID 
+	   inner join E_USER_VEHICLE  eu on  eu.VEHICLE_ID=ev.VEHICLE_ID
+	   inner  join  sys_user u on   u.user_id=eu.user_id
+	   where u.status=10021001
+	  		and ((e.SRC_CITY_ID=#{src_city_id} and e.DES_CITY_ID=#{des_city_id})  
+	   		or
+	   		(e.SRC_CITY_ID=#{des_city_id} and e.DES_CITY_ID=#{src_city_id}))
+ 	</select>
+ 	
+ 	<select id="getDealerNameByDealerId" parameterType="pd" resultType="pd">
+ 		select DEALER_NAME from base_dealer where DEALER_ID=#{dealerId} limit 0,1
+ 	</select>
+ 	
+ 	<select id="getOwnerMsgBySourceId" parameterType="pd" resultType="pd">
+ 		select USER_ID,OWNER_NAME,DEALER_ID,DRIVER_ID from e_order where ORDER_ID=#{orderId}
+ 	</select>
+ 	
+ 	<select id="getAmontUserByDriverId" parameterType="pd" resultType="pd">
+		select v.USER_ID,u.NAME 
+		from e_user_vehicle v inner join sys_user u on v.user_id=u.USER_ID
+		where EXISTS (
+			select 1 from e_user_vehicle uv where v.vehicle_id=uv.vehicle_id and uv.user_id=#{driverId}
+		)
+		and u.IS_MAIN_COUNT=10011001
+		LIMIT 0,1 	
+ 	</select>
+	
+	<select id="getCountNoReadMsgNum" parameterType="pd" resultType="java.lang.Integer">
+		select 
+			(IFNULL(sum(case when mr.MSG_RECEIVE_ID is null then 1 else 0 end),0)
+			+
+			(select IFNULL(count(MSG_RECEIVE_ID),0) from ma_msg_receive rm where rm.IS_READ=0 and rm.USER_ID=#{userId})
+		) totalNum
+		from ma_msg  m LEFT JOIN ma_msg_receive mr on m.MSG_ID=mr.MSG_ID and mr.USER_ID=#{userId}
+		where m.RANGE_FLAG=10011001 and m.USER_TYPE=#{userType}	
+	</select>
+	
+	<select id="insertOrderCost" parameterType="pd">
+		insert into e_order_cost
+		(COST_ID,ORDER_ID,COST_TYPE,AMOUNT,CREATE_BY,CREATE_DATE)
+		VALUES
+		(
+			getPrimary(),
+		    #{orderId},
+		    #{costType},
+		    #{amount},
+		    #{createBy},
+		    now()
+		)	
+	</select>
+	
+</mapper>

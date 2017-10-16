@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppOrderTaskMapper">
+    <!-- 获取未生成订单的待确认的1小时后的数据 -->
+    <select id="getAppGenerateOrderList" parameterType="pd" resultType="pd">
+          SELECT
+				o.ORDER_ID
+			FROM
+				e_order o
+			WHERE  o.STATUS=10211002
+			and o.PUBLISH_DATE<![CDATA[<=]]>DATE_ADD(NOW(), INTERVAL -240 MINUTE)
+    </select>
+    <!-- 生成订单 -->
+    <update id="updateOrderStatusByOrderId" parameterType="pd">
+       update  e_order o set 
+           o.status=10211004,
+	       o.ORDER_FLAG=10011001,
+	       o.ADD_TIME=now(),
+	       o.COM_ID=#{COM_ID},
+	       o.SEL_DATE=now(),
+	       o.price=#{PRICE},
+	       o.COM_NAME=#{COM_NAME},
+	       o.DRIVER_ID=#{DRIVER_ID},
+	       o.VEHICLE_ID=#{VEHICLE_ID},
+	       o.DRIVER_PHONE=#{DRIVER_PHONE},
+	       o.DRIVER_NAME=#{DRIVER_NAME},
+	       o.ORDER_PRODUCE=10221001
+       where o.order_id=#{ORDER_ID}
+    </update>
+    <!-- 根据订单id获取最小金额 -->
+    <select id="getOrderPriceByOrderId" parameterType="pd" resultType="pd">
+       select  e.*  from   E_ORDER_PRICE  e  where e.order_id=#{ORDER_ID}  order by e.price  asc  limit 0,1
+    </select>
+    <!-- 修改状态 -->
+    <update id="updateOrderPriceByOrderId" parameterType="pd" >
+       update E_ORDER_PRICE e set e.SELECTED = 10011002,e.SELECTED_DATE=now()  where e.PRICE_ID=#{PRICE_ID}
+    </update>
+    <!-- 查询有报价的订单发布时间大于三个小时的 -->
+    <select id="getAppOrderLockList" parameterType="pd" resultType="pd">
+       SELECT
+			o.*
+		FROM
+			e_order o
+		WHERE
+			o. STATUS = 10211001
+		AND o.PUBLISH_DATE <![CDATA[<=]]> DATE_ADD(NOW(), INTERVAL - 180 MINUTE)
+		AND EXISTS (
+			SELECT
+				ep.ORDER_ID
+			FROM
+				e_order_price ep
+			WHERE
+				ep.ORDER_ID = o.ORDER_ID
+		)
+    </select>
+    <!-- 修改订单为待确认状态 -->
+    <update id="updateAppOrderLockStatusByOrderId" parameterType="pd">
+       update  e_order o set 
+           o.status=10211002
+       where o.order_id=#{ORDER_ID}
+    </update>
+    <!-- 根据司机id查询车辆信息 -->
+    <select id="getEvehicleByDriverId" parameterType="pd" resultType="pd">
+		SELECT
+			e.*,u.TEL
+		FROM
+			e_vehicle e
+		INNER JOIN e_user_vehicle ev ON ev.VEHICLE_ID = e.VEHICLE_ID
+		inner join sys_user u on u.user_id = ev.user_id
+		WHERE
+			ev.USER_ID = #{DRIVER_ID}
+    </select>
+     <!-- 查询无报价的订单发布时间大于三个小时的 -->
+    <select id="getOrderRevokeList" parameterType="pd" resultType="pd">
+        SELECT
+			o.*
+		FROM
+			e_order o
+		WHERE
+			o. STATUS = 10211001
+		AND o.PUBLISH_DATE  <![CDATA[<=]]>  STR_TO_DATE(DATE_ADD(NOW(), INTERVAL - 180 MINUTE),"%Y-%m-%d %H:%i:%s")
+		 
+		AND not EXISTS (
+			SELECT
+				ep.ORDER_ID
+			FROM
+				e_order_price ep
+			WHERE
+				ep.ORDER_ID = o.ORDER_ID
+		)
+    </select>
+    
+      <!-- 修改订单为撤销状态 -->
+    <update id="updateAppOrderRevokeStatusByOrderId" parameterType="pd">
+       update  e_order o set 
+           o.status=10211003,
+           o.REVOKE_REMARK='系统撤单',
+           o.REVOKE_DATE=now(),
+           o.REVOKE_USER_ID=-1
+       where o.order_id=#{ORDER_ID}
+    </update>
+	
+</mapper>

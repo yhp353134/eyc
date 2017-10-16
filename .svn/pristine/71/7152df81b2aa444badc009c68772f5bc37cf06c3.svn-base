@@ -1,0 +1,21 @@
+endpoint = http://oss-cn-beijing.aliyuncs.com
+bucketName = cmal
+picLocation = CDoc/cms/
+accessKeyId = LTAIIVhSb69ZCqsz
+accessKeySecret = 0aiAyOg8DMfZnypVwwwMd2r6sFk4AQ
+
+#nginx\u672A\u4F7F\u7528 \u6240\u4EE5nginxHTTPServer\u5FC5\u987B\u8BBE\u7F6E\u6210OFF
+nginxHTTPServer = OFF
+nginxHTTPUrl = http://116.62.17.57
+
+#\u4E0B\u9762\u7684\u53C2\u6570\u5C5E\u4E8E\u5FAE\u4FE1\uFF0C\u76EE\u524D\u672A\u4F7F\u7528
+WECHAT_QRCODE_SUCCESS_URL=http://cm.hongyunok.com/iCar/weixin/mobile/html/prompt/Success.html
+WECHAT_QRCODE_FAILE_URL=http://cm.hongyunok.com/iCar/weixin/mobile/html/prompt/Fail.html
+WechatOauthUrl=http://cm.hongyunok.com/iCar/weixin/wechattran
+WechatQrcodeUrl=http://cm.hongyunok.com/iCar/weixin/wechatqrcode
+#\u77ED\u4FE1
+SMS_SEND_URL=http://sapi.253.com/msg/HttpBatchSendSM
+SMS_SEND_COUNT=Cams888
+SMS_SEND_PASSWORD=Cams888888
+#\u5E73\u53F0\u7535\u8BDD
+SYSTEM_ELEPHONE=021-51357511 

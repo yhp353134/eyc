@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileServer>
+	<NameNode id="nd01" domain="http://172.16.51.207:8088" enable="true">
+		<DataNode id="dn01" protocol="local" role="WRD">
+			<FileRoot>d:/tmp/dn01</FileRoot>
+		</DataNode>
+	</NameNode>
+	<NameNode id="nd02" domain="http://121.40.253.23:8088" enable="false">
+		<DataNode id="dn01" protocol="smb" role="WRD">
+			<User>egrid</User>
+			<Password>1qazxsw2</Password>
+			<HostIp>121.40.253.23</HostIp>
+			<FileRoot>/tmp/dn01</FileRoot>
+		</DataNode>
+	</NameNode>
+
+	<NameNode id="nd02" domain="http://114.55.41.71:8088" enable="false">
+		<DataNode id="dn01" protocol="smb" role="WRD">
+			<User>egrid</User>
+			<Password>Etran1qazxsw2</Password>
+			<HostIp>114.55.41.71</HostIp>
+			<FileRoot>/tmp/dn01</FileRoot>
+		</DataNode>
+	</NameNode>
+</FileServer>

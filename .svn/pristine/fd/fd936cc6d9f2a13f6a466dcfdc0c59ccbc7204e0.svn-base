@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WebserviceMapper">
+
+<insert id="insertInterLog" parameterType="pd">
+	INSERT INTO e_interface_log
+	(LOG_ID,LOG_MSG,LOG_STATUS,CREATE_DATE)
+	VALUES(#{logId},#{logMsg},10011002,now())
+</insert>
+
+<update id="updateInterLog" parameterType="java.lang.Long">
+	update e_interface_log set LOG_STATUS=10011001 where LOG_ID=#{logId}
+</update>
+
+<select id="checkUserIncontact" parameterType="java.util.HashMap" resultType="pd">
+	SELECT e.CONTACTS_ID 
+	from e_contacts e
+	where e.USER_ID=#{OWNER_USER_ID}
+	and e.CON_PHONE=#{TMP_PHNOE}
+</select>
+
+<insert id="insertUserIncontact" parameterType="java.util.HashMap">
+	INSERT INTO e_contacts
+	(CONTACTS_ID,USER_ID,CON_NAME,CON_PHONE,ADD_DATE,ADD_ID,DEALER_ID,CREATE_BY,CREATE_DATE)
+	VALUES
+	(getPrimary(),#{OWNER_USER_ID},#{TMP_NAME},#{TMP_PHNOE},now(),-1,#{DEALER_ID},-1,now())
+</insert>
+
+<insert id="insertSourceMsg" parameterType="java.util.HashMap">
+	INSERT INTO E_ORDER (
+		ORDER_ID,
+		`STATUS`,
+		USER_ID,
+		ORDER_FLAG,
+		PUBLISH_DATE,
+		BEGIN_DATE,
+		END_DATE,
+		B_CITY_ID,
+		B_CITY_NAME,
+		B_ADD,
+		E_CITY_ID,
+		E_CITY_NAME,
+		E_ADD,
+		OWNER_PHONE,
+		OWNER_ID,
+		OWNER_NAME,
+		PAY_PHONE,
+		PAY_NAME,
+		RE_NAME,
+		RE_PHONE,
+		MODLE_ID,
+		MODLE_CODE,
+		MODLE_NAME,
+		DIRECT_PRICE,
+		IS_TAX,
+		VIN,
+		DES,
+		DEALER_ID
+	) VALUES
+	(
+		getPrimary(),
+		10211001,
+		#{OWNER_USER_ID},
+		10011002,
+		now(),
+		#{EXPECT_DEAL_DATE},
+		#{EXPECT_SEND_DATE},
+		#{BEGIN_CITY_ID},
+		#{BEGIN_CITY},
+		#{BEGIN_CITY_ADDR},
+		#{END_CITY_ID},
+		#{END_CITY},
+		#{END_CITY_ADDR},
+		#{OWNER_PHONE},
+		#{OWNER_USER_ID},
+		#{OWNER_NAME},
+		#{SEND_USER_PHONE},
+		#{SEND_USER},
+		#{RECEVICE_USER},
+		#{RECEVICE_USER_PHONE},
+		#{MODEL_ID},
+		#{MODEL_CODE},
+		#{MODEL_NAME},
+		#{EXPECT_PRICE},
+		#{IS_TAX},
+		#{VIN},
+		#{REMARK},
+		#{DEALER_ID}
+	)
+</insert>
+
+</mapper>

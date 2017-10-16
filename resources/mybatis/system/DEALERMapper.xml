@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DEALERMapper">
+	
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into BASE_DEALER(
+			DEALER_ID,	
+			ORG_ID,	
+			DEALER_CODE,	
+			DEALER_NAME,	
+			LINKMAN,	
+			LINKTEL,	
+			EMAIL,	
+			FAX,	
+			HELP_TEL,	
+			ORDER_TEL,	
+			ADDRESS,	
+			LONGITUDE,	
+			LATITUDE,	
+			STATUS,	
+			ORDER_DISCOUNT,	
+			APP_ID,	
+			APPSECRET,	
+			TOKEN,	
+			WECHAT_ID,	
+			COMPANY_INFO,	
+			ACCESSTOKEN,	
+			TOKEN_TIME,	
+			CREATE_BY,	
+			CREATE_DATE,	
+			UPDATE_BY,	
+			UPDATE_DATE
+		) values (
+			#{DEALER_ID},	
+			#{ORG_ID},	
+			#{DEALER_CODE},	
+			#{DEALER_NAME},	
+			#{LINKMAN},	
+			#{LINKTEL},	
+			#{EMAIL},	
+			#{FAX},	
+			#{HELP_TEL},	
+			#{ORDER_TEL},	
+			#{ADDRESS},	
+			#{LONGITUDE},	
+			#{LATITUDE},	
+			#{STATUS},	
+			#{ORDER_DISCOUNT},	
+			#{APP_ID},	
+			#{APPSECRET},	
+			#{TOKEN},	
+			#{WECHAT_ID},	
+			#{COMPANY_INFO},	
+			#{ACCESSTOKEN},	
+			#{TOKEN_TIME},	
+			#{CREATE_BY},	
+			#{CREATE_DATE},	
+			#{UPDATE_BY},	
+			#{UPDATE_DATE}
+		)
+	</insert>
+	
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from TB_DEALER
+		where 
+			DEALER_ID = #{DEALER_ID}
+	</delete>
+	
+	
+	<!-- 修改 -->
+	<update id="updateDealerMsg"  parameterType="pd">
+		update  BASE_DEALER
+			set 
+				LINKMAN = #{LINKMAN},
+				LINKTEL = #{LINKTEL},
+				EMAIL = #{EMAIL},
+				FAX = #{FAX},
+				HELP_TEL = #{HELP_TEL},
+				ORDER_TEL = #{ORDER_TEL},
+				LONGITUDE = #{LONGITUDE},
+				LATITUDE = #{LATITUDE},
+			<!-- 	WORK_BEGIN=#{WORK_BEGIN},
+				WORK_END=#{WORK_END}, -->
+				ORDER_DISCOUNT = #{ORDER_DISCOUNT},
+				ADDRESS = #{ADDRESS},
+				APP_ID = #{APP_ID},
+				APPSECRET = #{APPSECRET},
+				TOKEN = #{TOKEN},
+				COMPANY_INFO = #{COMPANY_INFO},
+				CARS = #{CARS},
+				UPDATE_BY = #{UPDATE_BY},
+				<if test="userStatus != null and userStatus != ''">
+					STATUS = #{userStatus},
+				</if>
+				UPDATE_DATE = #{UPDATE_DATE}
+				<!-- WECHAT_NUM=#{WECHAT_NUM},
+				WECHAT_NAME=#{WECHAT_NAME} -->
+			where 
+				DEALER_ID = #{DEALER_ID}
+	</update>
+	
+	<delete id="deleteDealerImgFIles" parameterType="pd">
+		DELETE from  e_files 
+		where FILE_TYPE=10171001 
+			and use_type=#{useType}
+			and OBJECT_ID = #{DEALER_ID}
+	</delete>
+	
+	<select id="getBaseOrgId"  resultType="pd">
+		select ORG_ID from base_org where ORG_LEVEL=0 LIMIT 0,1
+	</select>
+	
+	<insert id="insertDealerMsg" parameterType="pd">
+		insert into BASE_DEALER 
+		(
+			DEALER_ID,
+			ORG_ID,
+			DEALER_CODE,
+			DEALER_NAME,
+			<if test="LINKMAN != null and LINKMAN != ''">
+				LINKMAN,		
+			</if>
+			<if test="LINKTEL != null and LINKTEL != ''">
+				LINKTEL,		
+			</if>
+			<if test="EMAIL != null and EMAIL != ''">
+				EMAIL,
+			</if>
+			<if test="FAX != null and FAX != ''">
+				FAX,
+			</if>	
+			<if test="HELP_TEL != null and HELP_TEL != ''">
+				HELP_TEL,
+			</if>	
+			<if test="ORDER_TEL != null and ORDER_TEL != ''">
+				ORDER_TEL,
+			</if>
+			<if test="LONGITUDE != null and LONGITUDE != ''">
+				LONGITUDE,
+			</if>	
+			<if test="LATITUDE != null and LATITUDE != ''">
+				LATITUDE,
+			</if>
+			<if test="ORDER_DISCOUNT != null and ORDER_DISCOUNT != ''">
+				ORDER_DISCOUNT,
+			</if>
+			<if test="ADDRESS != null and ADDRESS != ''">
+				ADDRESS,	
+			</if>
+			<if test="CARS != null and CARS != ''">
+				CARS,	
+			</if>
+			<if test="COMPANY_INFO != null and COMPANY_INFO != ''">
+				COMPANY_INFO,
+			</if>
+			`STATUS`,
+			CREATE_BY,
+			CREATE_DATE,
+			FLAG,
+			DEALER_TYPE
+		) 
+		values
+		(
+			#{DEALER_ID},
+			#{ORG_ID},
+			getDealerPrimary(),
+			#{DEALER_NAME},
+			<if test="LINKMAN != null and LINKMAN != ''">
+				#{LINKMAN},	
+			</if>
+			<if test="LINKTEL != null and LINKTEL != ''">
+				#{LINKTEL},	
+			</if>
+			<if test="EMAIL != null and EMAIL != ''">
+				#{EMAIL},	
+			</if>
+			<if test="FAX != null and FAX != ''">
+				#{FAX},	
+			</if>
+			<if test="HELP_TEL != null and HELP_TEL != ''">
+				#{HELP_TEL},	
+			</if>
+			<if test="ORDER_TEL != null and ORDER_TEL != ''">
+				#{ORDER_TEL},	
+			</if>
+			<if test="LONGITUDE != null and LONGITUDE != ''">
+				#{LONGITUDE},	
+			</if>	
+			<if test="LATITUDE != null and LATITUDE != ''">
+				#{LATITUDE},	
+			</if>
+			<if test="ORDER_DISCOUNT != null and ORDER_DISCOUNT != ''">
+				#{ORDER_DISCOUNT},	
+			</if>
+			<if test="ADDRESS != null and ADDRESS != ''">
+				#{ADDRESS},	
+			</if>
+			<if test="CARS != null and CARS != ''">
+				#{CARS},	
+			</if>
+			<if test="COMPANY_INFO != null and COMPANY_INFO != ''">
+				#{COMPANY_INFO},	
+			</if>
+			#{STATUS},
+			#{CREATE_BY},
+			#{CREATE_DATE},
+			#{DEALER_FLAG},
+			#{DEALER_TYPE}
+		)
+	</insert>
+	
+	<insert id="insertPostMsg" parameterType="pd">
+		INSERT INTO SYS_POST (
+			POST_ID,
+			POST_NAME,
+			POST_TYPE,
+			POST_STATUS,
+			ORG_ID,
+			CREATE_BY,
+			CREATE_DATE
+		)
+		VALUES
+		(
+			#{postId},
+			#{postName},
+			#{postType},
+			#{postStatus},
+			#{postOrgId},
+			#{createBy},
+			now()
+		)
+	</insert>
+	<insert id="insertPostRoleMsg" parameterType="pd">
+		INSERT INTO SYS_POST_ROLE (
+			POST_ROLE_ID,
+			ROLE_ID,
+			POST_ID,
+			CREATE_BY,
+			CREATE_DATE
+		)
+		VALUES
+		(
+			#{postRoleId},
+			279603330611000014,
+			#{postId},
+			#{createBy},
+			now()
+		)
+	</insert>
+	<!-- 插入角色职位关系 -->
+	<insert id="insertPostRoleMsgByOwner" parameterType="pd">
+		INSERT INTO SYS_POST_ROLE (
+			POST_ROLE_ID,
+			ROLE_ID,
+			POST_ID,
+			CREATE_BY,
+			CREATE_DATE
+		)
+		VALUES
+		(
+			#{postRoleId},
+			279605332511000031,
+			#{postId},
+			#{createBy},
+			now()
+		)
+	</insert>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+				a.DEALER_ID,	
+				a.ORG_ID,	
+				a.DEALER_CODE,	
+				a.DEALER_NAME,	
+				a.LINKMAN,	
+				a.LINKTEL,	
+				a.EMAIL,	
+				a.FAX,	
+				a.HELP_TEL,	
+				a.ORDER_TEL,	
+				a.ADDRESS,	
+				a.LONGITUDE,	
+				a.LATITUDE,	
+				a.ORDER_DISCOUNT,	
+				a.APP_ID,	
+				a.APPSECRET,	
+				a.TOKEN,
+				a.`STATUS`,
+				a.COMPANY_INFO,
+				a.CARS
+		from  BASE_DEALER a
+		where  a.DEALER_ID = #{DEALER_ID}
+	</select>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		SELECT
+				a.DEALER_ID,
+				a.DEALER_CODE,
+				a.DEALER_NAME,
+				o.ORG_NAME,
+				a.DEALER_TYPE,
+				DATE_FORMAT(a.CREATE_DATE,'%Y-%m-%d %H:%i:%s') CREATE_DATE,
+				a.CREATE_BY
+		FROM base_dealer a
+		Left JOIN base_org o ON a.ORG_ID = o.ORG_ID
+		WHERE a.`STATUS` = 10021001
+		AND a.DEALER_TYPE in (10151001,10151002) 
+		<if test="pd.orgLevel != 0 and pd.orgLevel != 3">
+			and EXISTS (select 1 from base_org b where a.ORG_ID=b.PARENT_ORG_ID)
+		</if>
+		<if test="pd.dealerName != null and pd.dealerName != ''">
+			and a.DEALER_NAME like  CONCAT('%',trim(#{pd.dealerName}),'%')
+		</if>
+		<if test="pd.dealerCode != null and pd.dealerCode != ''">
+			and a.DEALER_CODE like  CONCAT('%',trim(#{pd.dealerCode}),'%')
+		</if>
+		<if test="pd.orgType == 10120002">
+			<if test="pd.dealerOrg != null and pd.dealerOrg != ''">
+				and a.DEALER_ID=#{pd.dealerOrg}
+			</if>
+		</if>
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+				a.DEALER_ID,	
+				a.ORG_ID,	
+				a.DEALER_CODE,	
+				a.DEALER_NAME,	
+				a.LINKMAN,	
+				a.LINKTEL,	
+				a.EMAIL,	
+				a.FAX,	
+				a.HELP_TEL,	
+				a.ORDER_TEL,	
+				a.ADDRESS,	
+				a.LONGITUDE,	
+				a.LATITUDE,	
+				a.STATUS,	
+				a.ORDER_DISCOUNT,	
+				a.APP_ID,	
+				a.APPSECRET,	
+				a.TOKEN,	
+				a.WECHAT_ID,	
+				a.COMPANY_INFO,	
+				a.ACCESSTOKEN,	
+				a.TOKEN_TIME,	
+				a.CREATE_BY,	
+				a.CREATE_DATE,	
+				a.UPDATE_BY,	
+				a.UPDATE_DATE
+		from 
+				BASE_DEALER a
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from BASE_DEALER
+		where 
+			DEALER_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+	<!-- 职位查询省份 -->
+	<select id="getProvinceList" parameterType="pd" resultType="pd">
+		select ORG_ID,ORG_NAME from base_org  where parent_org_id=#{dealeOrgId}
+	</select>
+	
+	<!-- 经销商查询省份 -->
+	<select id="getProvinceDealerList" parameterType="pd" resultType="pd">
+		select ORG_ID,DEALER_CODE ORG_NAME from base_dealer where dealer_id=#{dealerId}
+	</select>
+	
+	<!-- 查询评价列表 -->
+	<select id="getEvaluaelistPage" parameterType="page" resultType="pd">
+		SELECT
+			E.TYPE_ID,
+			E.TYPE_NAME,
+			E.BUS_POINT,
+			D.DATA_NAME BUS_POINT_NAME,
+			E.TYPE_STATE,
+			F.DATA_NAME TYPE_STATE_NAME,
+			E.TYPE_SORT,
+			H.DATA_NAME TYPE_TYPE_NAME,
+			E.TYPE_TYPE,
+			E.CREATE_BY,
+			E.CREATE_DATE
+		FROM
+			COM_EVALUATE_TYPE E
+		INNER JOIN SYS_DATA D ON E.BUS_POINT = D.DATA_KEY
+		INNER JOIN SYS_DATA H ON E.TYPE_TYPE = H.DATA_KEY
+		INNER JOIN SYS_DATA F ON E.TYPE_STATE=F.DATA_KEY
+		WHERE 1=1
+		<if test="pd.busPoint != null and pd.busPoint != ''">
+			AND E.BUS_POINT=#{pd.busPoint}
+		</if>
+		ORDER BY E.CREATE_DATE DESC
+	</select>
+	<select id="countEvalueNum" parameterType="pd" resultType="pd">
+		select TYPE_ID from COM_EVALUATE_TYPE 
+		where BUS_POINT=#{busPoint}
+			and TYPE_TYPE=#{busType}
+	</select>
+	<insert id="addEvaluateMsg" parameterType="pd">
+		insert into com_evaluate_type
+		 (TYPE_ID, TYPE_NAME, BUS_POINT,TYPE_STATE, TYPE_SORT, TYPE_TYPE,CREATE_BY, CREATE_DATE)
+	    values (#{typeId,jdbcType=BIGINT}, #{evaluateName,jdbcType=VARCHAR}, #{busPoint,jdbcType=INTEGER}, 
+	      #{busStatus,jdbcType=INTEGER}, #{typeSort,jdbcType=INTEGER}, #{busType,jdbcType=INTEGER}, 
+	      #{userName,jdbcType=VARCHAR}, now())
+	</insert>
+	<select id="evaluateMsg" parameterType="pd" resultType="pd">
+		SELECT T.TYPE_ID,T.TYPE_NAME,T.TYPE_STATE,T.TYPE_TYPE,T.BUS_POINT,D.DATA_NAME BUS_POINT_NAME
+		FROM COM_EVALUATE_TYPE T INNER JOIN SYS_DATA D ON T.BUS_POINT=D.DATA_KEY
+		WHERE t.TYPE_ID=#{typeId}
+	</select>
+	<update id="updateEvaluateMsg" parameterType="pd">
+		update com_evaluate_type
+		set  TYPE_NAME = #{evaluateName,jdbcType=VARCHAR},
+		      BUS_POINT = #{busPoint,jdbcType=INTEGER},
+		      TYPE_STATE = #{busStatus,jdbcType=INTEGER},
+		      UPDATE_BY = #{userName,jdbcType=VARCHAR},
+		      UPDATE_DATE = now()
+     	where TYPE_ID=#{typeId}
+	</update>
+	
+	<insert id="insertFileImgInDealer" parameterType="pd">
+		insert into e_files
+		(
+			file_id,file_name,file_type,url,up_user,up_date,use_type,object_id
+		)
+		VALUES
+		(
+			#{fileId},#{fileName},#{fileType},#{fileUrl},#{userId},now(),#{useType},#{objectId}
+		)
+	</insert>
+	
+	<select id="getFileList" parameterType="pd" resultType="pd">
+		select FILE_ID,FILE_NAME,URL ,USE_TYPE
+		from e_files 
+		where  FILE_STATUS=10021001 and FILE_TYPE=10171001 and OBJECT_ID = #{DEALER_ID} 
+	</select>
+	
+	<select id="jumpDepositPagelistPage" parameterType="page" resultType="pd">
+		select 
+			E.ORDER_ID,E.B_CITY_NAME,
+			E.E_CITY_NAME,E.MODLE_NAME,
+			E.PRICE,E.DRIVER_ID,E.DRIVER_NAME
+		from e_order e 
+		where e.STATUS in(10211009,10211010,10211011)
+		and e.DEPOSIT_STATUS = 10011002
+		and e.order_flag=10011001
+		and EXISTS(
+			select u.user_id from sys_user u where u.DEALER_ID = #{pd.dealerId}  and e.driver_id=u.user_id
+		 )
+	</select>
+	
+	<update id="updateOrderDepositStatus" parameterType="pd">
+		update e_order set DEPOSIT_STATUS=10011001 where ORDER_ID=#{orderId}
+	</update>
+	
+	<update id="updateUserMoney" parameterType="pd">
+		update sys_user set AMOUNT=AMOUNT-#{priceNum} where USER_ID=#{amontUserId}
+	</update>
+	
+	<insert id="saveAmount"  parameterType="pd" >
+	insert into e_amount_record(
+		RECORD_ID,
+		TYPE,
+		AMOUNT,
+		USER_ID,
+		USER_NAME,
+		BUSINESS_TYPE,
+		BUSINESS_ID,
+		CREATE_BY,
+		CREATE_DATE,
+		ADD_DATE,
+		DEPOSIT_ID
+	)values(
+		getPrimary(),
+		#{moneyType},
+		#{amount},
+		#{userId},
+		#{userName},
+		#{businessType},
+		#{businessId},
+		#{userId},
+		now(),
+		now(),
+		#{depositId}
+	)
+</insert>
+
+<insert id="saveDepositRecord" parameterType="pd">
+	INSERT INTO E_DEALER_DEPOSIT
+	(DEPOSIT_ID,DEALER_ID,AMOUNT,CREATE_BY,CREATE_DATE)
+	values 
+	(#{depositId},#{dealerId},#{depositAmount},#{createUser},now())
+</insert>
+
+<select id="jumpDepositDetaillistPage" parameterType="page" resultType="pd">
+	select d.DEPOSIT_ID,d.AMOUNT,u.`NAME`,DATE_FORMAT(d.CREATE_DATE,'%Y-%m-%d %H:%i:%s') CREATE_DATE   
+	from  e_dealer_deposit d INNER JOIN sys_user u on d.CREATE_BY=u.USER_ID
+	where d.dealer_id=#{pd.dealerId}
+	ORDER BY d.create_date DESC
+</select>
+	
+<select id="jumpDepositDetailPageInOrder" parameterType="page" resultType="pd">
+	select e.ORDER_ID,e.B_CITY_NAME,e.E_CITY_NAME,e.DRIVER_NAME,e.PRICE,e.MODLE_NAME
+	from e_dealer_deposit d inner join e_amount_record a on d.DEPOSIT_ID=a.DEPOSIT_ID
+	inner join e_order e on a.BUSINESS_ID=e.ORDER_ID
+	where d.DEPOSIT_ID=#{pd.depositId}
+	ORDER BY a.CREATE_DATE DESC
+</select>
+
+</mapper>

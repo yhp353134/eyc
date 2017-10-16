@@ -1,0 +1,777 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SourceGoodsMapper">
+
+<select id="getSourcelistPage"  parameterType="page" resultType="pd">
+	SELECT
+		e.ORDER_ID,
+		e.USER_ID,
+		e.OWNER_PHONE,
+		e.OWNER_NAME,
+		e.B_CITY_NAME,
+		e.E_CITY_NAME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y-%m-%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y-%m-%d') END_DATE,
+		e.PAY_NAME,
+		e.RE_NAME,
+		e.DIRECT_PRICE,
+		e.VEHICLE_ID,
+		e.ORDER_FLAG,
+		e.`STATUS`,
+		CASE when h.PRICE_NUM >0 then 1 else 0 end PRICE_FLAG
+	from E_ORDER e 
+	left join  (select ORDER_ID,COUNT(PRICE_ID) PRICE_NUM  from E_ORDER_PRICE where DEALER_EXAMINE=10141002 GROUP BY ORDER_ID) h 
+		on e.ORDER_ID=h.ORDER_ID
+	where e.ORDER_FLAG=10011002
+	<if test="pd.loginName != null and pd.loginName != ''">
+		and e.OWNER_PHONE=#{pd.loginName}
+	</if>
+	<if test="pd.chineName != null and pd.chineName != ''">
+		and e.OWNER_NAME  LIKE CONCAT('%',#{pd.chineName},'%')
+	</if>
+	<if test="pd.carId != null and pd.carId != '' and pd.carId != 0">
+		and e.MODLE_ID=#{pd.carId}
+	</if>
+	<if test="pd.cityId != null and pd.cityId != '' and pd.cityId != 0">
+		and e.B_CITY_ID=#{pd.cityId}
+	</if>
+	<if test="pd.cityId1 != null and pd.cityId1 != '' and pd.cityId1 != 0">
+		and e.E_CITY_ID=#{pd.cityId1}
+	</if>
+	<if test="pd.orgType == 10120002">
+		and e.dealer_id=#{pd.dealerId}
+	</if>
+	order by PUBLISH_DATE desc
+</select>
+	
+<select id="getSourceOwnerMsg" parameterType="java.lang.String" resultType="pd">
+	select USER_ID,TEL,`NAME`,DEALER_ID
+	from sys_user
+	where `STATUS`=10021001
+	and AUDIT_STATUS=10141002
+	and USER_TYPE in(10131002,10131004)
+	and USER_NAME=#{telphone}
+	limit 0,1
+</select>
+
+<select id="getCityMsgByName" parameterType="java.lang.String" resultType="pd">
+	select REGION_CODE from e_region  
+	where type=10291002
+	and REGION_NAME=#{cityName}
+	limit 0,1
+</select>
+
+<select id="getModelMsgByName" parameterType="java.lang.String"  resultType="pd">
+	select ID,`CODE`,`NAME`
+	from E_AUTO_MAT where `LEVEL`=10051002
+	and `NAME`= #{modelName}
+	limit 0,1
+</select>
+
+<select id="getCarMsgByVin" parameterType="java.lang.String" resultType="pd">
+	SELECT  VEHICLE_ID,VIN,PLATE_NUM,CAR_NUM
+	from e_vehicle 
+	where STATUS=10021001
+	and vin=#{vin}
+	LIMIT 0,1
+</select>
+
+<select id="checkUserMsgInSys" parameterType="pd" resultType="pd">
+	select CONTACTS_ID from E_CONTACTS 
+	where USER_ID=#{userId} and CON_PHONE=#{sendTelphone}
+	limit 0,1
+</select>
+
+<insert id="insertUserMsgSys" parameterType="pd">
+	insert into e_contacts
+	(
+		CONTACTS_ID,USER_ID,CON_NAME,CON_PHONE,ADD_DATE,ADD_ID,DEALER_ID,CREATE_BY,CREATE_DATE
+	)
+	VALUES
+	(
+		#{praId},#{userId},#{userChinName},#{sendTelphone},now(),#{userId},#{dealerId},#{userId},now()
+	)
+</insert>
+
+<insert id="insertSourceGoodsMsg" parameterType="java.util.HashMap">
+	INSERT INTO E_ORDER (
+		ORDER_ID,
+		`STATUS`,
+		USER_ID,
+		ORDER_FLAG,
+		PUBLISH_DATE,
+		BEGIN_DATE,
+		END_DATE,
+		B_CITY_ID,
+		B_CITY_NAME,
+		B_ADD,
+		E_CITY_ID,
+		E_CITY_NAME,
+		E_ADD,
+		VEHICLE_ID,
+		OWNER_PHONE,
+		OWNER_ID,
+		OWNER_NAME,
+		PAY_ID,
+		PAY_PHONE,
+		PAY_NAME,
+		RE_ID,
+		RE_NAME,
+		RE_PHONE,
+		MODLE_ID,
+		MODLE_CODE,
+		MODLE_NAME,
+		DIRECT_PRICE,
+		IS_TAX,
+		CAR_NO,
+		VIN,
+		DES,
+		dealer_id
+	) VALUES
+	(
+		#{sourceId},
+		#{sourceStatus},
+		#{ownerId},
+		#{sourceFlag},
+		now(),
+		#{beginDate},
+		#{endDate},
+		#{beginWordCode},
+		#{beginWordName},
+		#{beginWordLoad},
+		#{endWordCode},
+		#{endWordName},
+		#{endWordLoad},
+		#{vehiceId},
+		#{ownerTel},
+		#{ownerId},
+		#{ownerName},
+		#{sendId},
+		#{sendTel},
+		#{sendName},
+		#{recevieId},
+		#{recevieName},
+		#{recevieTel},
+		#{modelId},
+		#{modelCode},
+		#{modelName},
+		#{expertPrice},
+		#{isTax},
+		#{carNo},
+		#{vin},
+		#{sourceRemark},
+		#{ownerDealerId}
+	)
+</insert>
+
+<select id="getSourceDetailMsg" parameterType="pd"  resultType="pd">
+	select 
+		ORDER_ID,
+		`STATUS`,
+		USER_ID,
+		DATE_FORMAT(ADD_TIME,'%Y-%m-%d') ADD_TIME,
+		DATE_FORMAT(BEGIN_DATE,'%Y-%m-%d') BEGIN_DATE,
+		DATE_FORMAT(END_DATE,'%Y-%m-%d') END_DATE,
+		B_CITY_ID,
+		B_CITY_NAME,
+		B_ADD,
+		E_CITY_ID,
+		E_CITY_NAME,
+		E_ADD,
+		ISTAKE,
+		ISTOOK,
+		VEHICLE_ID,
+		OWNER_PHONE,
+		OWNER_NAME,
+		PAY_ID,
+		PAY_PHONE,
+		PAY_NAME,
+		RE_ID,
+		RE_PHONE,
+		RE_NAME,
+		MODLE_ID,
+		MODLE_CODE,
+		MODLE_NAME,
+		NUMBER,
+		DES,
+		INVOICE_ID,
+		COM_ID,
+		PRICE,
+		DRIVER_ID,
+		DRIVER_PHONE,
+		DRIVER_NAME,
+		DATE_FORMAT(PAYMENT_TIME,'%Y-%m-%d') PAYMENT_TIME,
+		PAYMENT_FLAG,
+		DATE_FORMAT(SEL_DATE,'%Y-%m-%d') SEL_DATE,
+		DATE_FORMAT(COMPLETE_DTAE,'%Y-%m-%d') COMPLETE_DTAE,
+		DATE_FORMAT(SEND_TIME,'%Y-%m-%d') SEND_TIME,
+		DATE_FORMAT(ARRIVE_TIME,'%Y-%m-%d') ARRIVE_TIME,
+		DATE_FORMAT(HAND_TIME,'%Y-%m-%d') HAND_TIME,
+		DATE_FORMAT(GET_TIME,'%Y-%m-%d') GET_TIME,
+		DATE_FORMAT(PUBLISH_DATE,'%Y-%m-%d') PUBLISH_DATE,
+		DATE_FORMAT(REVOKE_DATE,'%Y-%m-%d') REVOKE_DATE,
+		DATE_FORMAT(COMPLETE_DTAE,'%Y-%m-%d') COMPLETE_DTAE,
+		DIRECT_PRICE,
+		IS_TAX,
+		VIN,
+		REVOKE_USER_ID,
+		REVOKE_REMARK,
+		CAR_NO,
+		IS_REPEAT,
+		DATE_FORMAT(REPEAT_DATE,'%Y-%m-%d') REPEAT_DATE,
+		ORDER_PRODUCE
+	from e_order
+	where  ORDER_ID=#{sourceId}
+</select>
+
+<select id="getBrandByModelId" parameterType="pd" resultType="pd">
+	select EA.ID,EA.`CODE`,EA.`NAME`
+	from E_AUTO_MAT e , E_AUTO_MAT EA
+	where e.PARENT_ID=EA.ID
+		and e.`LEVEL`=10051002
+		and e.ID=#{modelId}
+</select>
+
+<select id="getOrderlistPage" parameterType="page" resultType="pd">
+	SELECT
+		e.ORDER_ID,
+		e.OWNER_PHONE,
+		e.OWNER_NAME,
+		e.B_CITY_NAME,
+		e.E_CITY_NAME,
+		DATE_FORMAT(e.ADD_TIME,'%Y-%m-%d') ADD_TIME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y-%m-%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y-%m-%d') END_DATE,
+		e.PAY_NAME,
+		e.PAY_PHONE,
+		e.RE_NAME,
+		e.RE_PHONE,
+		e.`STATUS`,
+		e.PRICE,
+		e.VIN,
+		e.USER_ID,
+		e.MODLE_NAME,
+		DATE_FORMAT(e.HAND_TIME,'%Y-%m-%d %H:%i') HAND_TIME
+	from E_ORDER e 
+	where e.ORDER_FLAG=10011001
+	<if test="pd.orderId != null and pd.orderId != ''">
+		and e.ORDER_ID=#{pd.orderId}
+	</if>
+	<if test="pd.orderVin != null and pd.orderVin != ''">
+		and e.VIN=#{pd.orderVin}
+	</if>
+	<if test="pd.carId != null and pd.carId != '' and pd.carId != 0">
+		and e.MODLE_ID=#{pd.carId}
+	</if>
+	<if test="pd.cityId != null and pd.cityId != '' and pd.cityId != 0">
+		and e.B_CITY_ID=#{pd.cityId}
+	</if>
+	<if test="pd.cityId1 != null and pd.cityId1 != '' and pd.cityId1 != 0">
+		and e.E_CITY_ID=#{pd.cityId1}
+	</if>
+	<if test="pd.orgType == 10120002">
+		and e.dealer_id=#{pd.dealerId}
+	</if>
+	order by e.ADD_TIME desc
+</select>
+
+<select id="getorderGuiList" parameterType="pd" resultType="pd">
+	select NODE_ID,DATE_FORMAT(CREATE_DATE,'%Y-%m-%d %H:%i') CREATE_DATE 
+	from E_ORDER_CONTRAIL where ORDER_ID=#{sourceId}
+	ORDER BY CREATE_DATE
+</select>
+
+<select id="getorderCommentList" parameterType="pd" resultType="pd">
+	select d.PROJECT_NAME,d.CONMENT 
+	from E_COMMENT e , E_COMMENT_DET d 
+	where e.COMMENT_ID=d.COMMENT_ID and e.ORDER_ID=#{sourceId}
+	ORDER BY DET_ID
+</select>
+
+<select id="getOrderPicList" parameterType="pd" resultType="pd">
+	select FILE_ID,URL,USE_DETIAL_TYPE
+	from e_files
+	where FILE_TYPE=10171001
+	and FILE_STATUS=10021001
+	and USE_TYPE=10181008
+	and OBJECT_ID=#{sourceId}
+</select>
+
+<update id="updateOrderStatus" parameterType="pd">
+	update e_order set STATUS=#{orderStatus},GET_TIME=now() where ORDER_ID=#{orderId}
+</update>
+
+<select id="getLineIdByLoad" parameterType="pd" resultType="java.util.HashMap">
+	select CAR_ID from e_line where SRC_CITY_ID=#{loadBegin} and DES_CITY_ID=#{endLoad} limit 0,1
+</select>
+
+<select id="getCommentBySourceId" parameterType="pd" resultType="pd">
+	select CONTENT,E_CONTENT,CONMENT from E_COMMENT where ORDER_ID=#{sourceId}
+</select>
+
+<select id="getSourceConfirmList" parameterType="pd" resultType="pd">
+	select  
+		PRICE_ID,DATE_FORMAT(PRICE_DATE,'%Y-%m-%d') PRICE_DATE,DRIVER_ID,DRIVER_NAME,
+		PRICE,COM_NAME,DRIVER_NAME
+	from E_ORDER_PRICE where ORDER_ID=#{sourceId}
+</select>
+
+<select id="getPricemsgByPriveId" parameterType="pd" resultType="pd">
+	select e.COM_ID,e.COM_NAME,u.`NAME`,u.TEL,e.PRICE,e.DRIVER_ID,ev.VEHICLE_ID,u.USER_ID
+	from E_ORDER_PRICE e INNER JOIN sys_user u on e.DRIVER_ID=u.USER_ID
+	INNER JOIN E_USER_VEHICLE ev on u.USER_ID=ev.USER_ID
+	where e.PRICE_ID=#{priceId}
+</select>
+
+<update id="updatePriceById" parameterType="pd" >
+	update E_ORDER_PRICE set SELECTED=10011001,SELECTED_DATE=NOW() ,UPDATE_BY=#{userId},UPDATE_DATE=NOW()
+	where PRICE_ID=#{priceId}
+</update>
+
+<update id="updateSourceByPricepd" parameterType="pd" >
+	update 
+		   e_order o set 
+           o.status=10211004,
+	       o.ORDER_FLAG=10011001,
+	       o.ADD_TIME=now(),
+	       o.COM_ID=#{COM_ID},  
+	       o.SEL_DATE=now(),
+	       o.DIRECT_PRICE=#{PRICE},
+	       o.PRICE=(select SUM(AMOUNT)+#{PRICE} from e_order_cost where ORDER_ID=#{orderId}),
+	       o.COM_NAME=#{COM_NAME}, 
+	       o.DRIVER_ID=#{DRIVER_ID}, 
+	       o.VEHICLE_ID=#{VEHICLE_ID}, 
+	       o.DRIVER_PHONE=#{TEL}, 
+	       o.DRIVER_NAME=#{NAME},
+	       o.ORDER_PRODUCE=10221002
+       where o.order_id=#{orderId}
+</update>
+
+<insert id="saveAmount"  parameterType="pd" >
+	insert into e_amount_record(
+		RECORD_ID,
+		TYPE,
+		AMOUNT,
+		USER_ID,
+		USER_NAME,
+		BUSINESS_TYPE,
+		BUSINESS_ID,
+		CREATE_BY,
+		CREATE_DATE,
+		ADD_DATE
+	)values(
+		getPrimary(),
+		#{moneyType},
+		#{amount},
+		#{userId},
+		#{userName},
+		#{businessType},
+		#{businessId},
+		#{userId},
+		now(),
+		now()
+	)
+</insert>
+
+<update id="updateUserAmount" parameterType="pd">
+	update sys_user
+		 set AMOUNT=(select sum(AMOUNT) from e_amount_record where USER_ID=#{userId} and BUSINESS_TYPE=10321001 and TYPE=10311001)
+	where USER_ID=#{userId}
+</update>
+
+<update id="revokeDataByIdAndType" parameterType="pd">
+	update e_order set `STATUS`=#{dataStatus},REVOKE_USER_ID=#{userId},REVOKE_REMARK=#{revokeTxt},REVOKE_DATE=NOW()
+	where ORDER_ID=#{primaryId}
+</update>
+
+<select id="dealerDriverSourceFailerlistPage" parameterType="page" resultType="pd">
+	<!-- 查询货源：未选中+货源撤销的 -->
+	select 
+			e.ORDER_ID,
+			e.USER_ID,
+			e.OWNER_PHONE,
+			e.OWNER_NAME,
+			e.B_CITY_NAME,
+			e.E_CITY_NAME,
+			DATE_FORMAT(e.BEGIN_DATE,'%Y-%m-%d') BEGIN_DATE,
+			DATE_FORMAT(e.END_DATE,'%Y-%m-%d') END_DATE,
+			e.MODLE_NAME,
+			e.PAY_NAME,
+			e.RE_NAME,
+			p.PRICE_ID,
+			p.DRIVER_NAME,
+			DATE_FORMAT(p.PRICE_DATE,'%Y-%m-%d') PRICE_DATE,
+			p.PRICE,
+			e.STATUS
+	from E_ORDER_PRICE p INNER JOIN e_order e
+		on p.ORDER_ID=e.ORDER_ID
+	where p.SELECTED=10011002
+	and e.`STATUS` between 10211003 and 10211011
+	and p.DEALER_EXAMINE=10141002
+	and p.COM_ID=#{pd.dealerId}
+	<if test="pd.loginName != null and pd.loginName != ''">
+		and e.OWNER_PHONE=#{pd.loginName}
+	</if>
+	<if test="pd.chineName != null and pd.chineName != ''">
+		and e.OWNER_NAME  LIKE CONCAT('%',#{pd.chineName},'%')
+	</if>
+	<if test="pd.carId != null and pd.carId != '' and pd.carId != 0">
+		and e.MODLE_ID=#{pd.carId}
+	</if>
+	<if test="pd.cityId != null and pd.cityId != '' and pd.cityId != 0">
+		and e.B_CITY_ID=#{pd.cityId}
+	</if>
+	<if test="pd.cityId1 != null and pd.cityId1 != '' and pd.cityId1 != 0">
+		and e.E_CITY_ID=#{pd.cityId1}
+	</if>
+	order by PUBLISH_DATE desc
+</select>
+
+<select id="dealerDriverSourceOrderlistPage" parameterType="page" resultType="pd">
+	SELECT
+		e.ORDER_ID,
+		e.OWNER_PHONE,
+		e.OWNER_NAME,
+		e.B_CITY_NAME,
+		e.E_CITY_NAME,
+		DATE_FORMAT(e.ADD_TIME,'%Y-%m-%d') ADD_TIME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y-%m-%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y-%m-%d') END_DATE,
+		e.PAY_NAME,
+		e.PAY_PHONE,
+		e.RE_NAME,
+		e.RE_PHONE,
+		e.`STATUS`,
+		e.PRICE,
+		e.VIN,
+		e.USER_ID,
+		e.DRIVER_NAME,
+		e.MODLE_NAME,
+		DATE_FORMAT(e.HAND_TIME,'%Y-%m-%d %H:%i') HAND_TIME
+	from E_ORDER e 
+	where e.ORDER_FLAG=10011001
+		and e.COM_ID=#{pd.dealerId}
+	<if test="pd.orderId != null and pd.orderId != ''">
+		and e.ORDER_ID=#{pd.orderId}
+	</if>
+	<if test="pd.carId != null and pd.carId != '' and pd.carId != 0">
+		and e.MODLE_ID=#{pd.carId}
+	</if>
+	<if test="pd.cityId != null and pd.cityId != '' and pd.cityId != 0">
+		and e.B_CITY_ID=#{pd.cityId}
+	</if>
+	<if test="pd.cityId1 != null and pd.cityId1 != '' and pd.cityId1 != 0">
+		and e.E_CITY_ID=#{pd.cityId1}
+	</if>
+	order by e.ADD_TIME desc
+</select>
+
+<select id="dealerDriverSourceChinalistPage" parameterType="page" resultType="pd">
+	SELECT
+		e.ORDER_ID,
+		e.USER_ID,
+		e.OWNER_PHONE,
+		e.OWNER_NAME,
+		e.B_CITY_NAME,
+		e.E_CITY_NAME,
+		DATE_FORMAT(e.BEGIN_DATE,'%Y-%m-%d') BEGIN_DATE,
+		DATE_FORMAT(e.END_DATE,'%Y-%m-%d') END_DATE,
+		e.PAY_NAME,
+		e.RE_NAME,
+		e.DIRECT_PRICE,
+		e.VEHICLE_ID,
+		e.ORDER_FLAG,
+		e.MODLE_NAME,
+		e.`STATUS`,
+		CASE when h.PRICE_NUM >0 then 1 else 0 end PRICE_FLAG,
+		(select COUNT(n.OFFER_ID) from offer_notice n where n.SOURCE_ID=e.ORDER_ID and DEALER_ID=#{pd.dealerId}) NOTICE_NUM
+	from E_ORDER e 
+	left join  (select ORDER_ID,COUNT(PRICE_ID) PRICE_NUM  from E_ORDER_PRICE GROUP BY ORDER_ID) h 
+		on e.ORDER_ID=h.ORDER_ID
+	where e.ORDER_FLAG=10011002
+		and e.STATUS=10211001
+	<if test="pd.loginName != null and pd.loginName != ''">
+		and e.OWNER_PHONE=#{pd.loginName}
+	</if>
+	<if test="pd.chineName != null and pd.chineName != ''">
+		and e.OWNER_NAME  LIKE CONCAT('%',#{pd.chineName},'%')
+	</if>
+	<if test="pd.carId != null and pd.carId != '' and pd.carId != 0">
+		and e.MODLE_ID=#{pd.carId}
+	</if>
+	<if test="pd.cityId != null and pd.cityId != '' and pd.cityId != 0">
+		and e.B_CITY_ID=#{pd.cityId}
+	</if>
+	<if test="pd.cityId1 != null and pd.cityId1 != '' and pd.cityId1 != 0">
+		and e.E_CITY_ID=#{pd.cityId1}
+	</if>
+	order by e.PUBLISH_DATE desc
+</select>
+
+<select id="dealerDriverExamineSourcelistPage"  parameterType="page"  resultType="pd">
+	select 
+			e.ORDER_ID,
+			p.PRICE_ID,
+			e.USER_ID,
+			e.OWNER_PHONE,
+			e.OWNER_NAME,
+			e.B_CITY_NAME,
+			e.E_CITY_NAME,
+			DATE_FORMAT(e.BEGIN_DATE,'%Y-%m-%d') BEGIN_DATE,
+			DATE_FORMAT(e.END_DATE,'%Y-%m-%d') END_DATE,
+			e.MODLE_NAME,
+			e.PAY_NAME,
+			e.RE_NAME,
+			p.DRIVER_NAME,
+			DATE_FORMAT(p.PRICE_DATE,'%Y-%m-%d') PRICE_DATE,
+			p.PRICE
+	from e_order e inner join e_order_price p 
+		on e.ORDER_ID=p.ORDER_ID
+	where e.ORDER_FLAG=10011002
+	and p.DEALER_EXAMINE=10141001
+	and e.STATUS=10211001
+	and p.COM_ID=#{pd.dealerId}
+	<if test="pd.carId != null and pd.carId != '' and pd.carId != 0">
+		and e.MODLE_ID=#{pd.carId}
+	</if>
+	<if test="pd.cityId != null and pd.cityId != '' and pd.cityId != 0">
+		and e.B_CITY_ID=#{pd.cityId}
+	</if>
+	<if test="pd.cityId1 != null and pd.cityId1 != '' and pd.cityId1 != 0">
+		and e.E_CITY_ID=#{pd.cityId1}
+	</if>
+	ORDER BY p.PRICE_DATE DESC
+</select>
+
+<update id="dealerDriverExamineReson" parameterType="pd">
+	update e_order_price 
+	set DEALER_EXAMINE=#{priceStatus},
+	examine_msg=#{examineSuggest},
+	UPDATE_BY=#{userId},
+	UPDATE_DATE=now() 
+	where PRICE_ID=#{priceId}
+</update>
+
+<update id="updateDealerDriverExamineStatus" parameterType="pd">
+	update e_order set `STATUS`=10211002 where ORDER_ID=#{sourceId}
+</update>
+
+<!-- 根据价格ID获取货主、司机、承运商、货源的信息 -->
+<select id="getOwnerMsgByPriceId" parameterType="pd" resultType="pd">
+	select p.DRIVER_ID,p.DRIVER_NAME,p.COM_NAME,e.USER_ID,e.OWNER_NAME NAME,e.ORDER_ID 
+	FROM
+	e_order e INNER JOIN e_order_price p on e.ORDER_ID=p.ORDER_ID
+	where p.PRICE_ID=#{priceId}
+	LIMIT 0,1
+</select>
+
+<select id="getDriverList" parameterType="pd" resultType="pd">
+	select u.USER_ID,u.`NAME`,u.TEL
+	from sys_user u
+	where u.`STATUS`=10021001
+	and u.USER_TYPE in(10131003,10131005)
+	and u.DEALER_ID=#{dealerId}
+</select>
+
+<insert id="insertOfferNoticeMsg" parameterType="pd">
+	INSERT INTO offer_notice
+	(offer_id,dealer_id,source_id,create_by,create_date,PRICE,DRIVER_ID)
+	VALUES
+	(getPrimary(),#{dealerId},#{sourceId},#{userChinese},now(),#{priceNum},#{driversId})
+</insert>
+
+<select id="getOfferPriceList" parameterType="pd" resultType="pd">
+	select 
+		DRIVER_NAME,
+		PRICE,DATE_FORMAT(PRICE_DATE,'%Y-%m-%d %H:%i:%s') PRICE_DATE,
+		COM_NAME,
+		EXAMINE_MSG,
+		case when SELECTED=10011001 then '被选中' else '未选中' end IS_SELECTED
+	from E_ORDER_PRICE 
+	where ORDER_ID=#{sourceId}
+	<if test="dealerId != null and dealerId != ''">
+		and com_id = #{dealerId}
+	</if>
+	ORDER BY PRICE_DATE 
+</select>
+
+<select id="platformRechargenOwnerRecordlistPage" parameterType="pd" resultType="pd">
+	select RECORD_ID,USER_NAME,AMOUNT,BUSINESS_ID,DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') CREATE_DATE 
+	from E_AMOUNT_RECORD 
+	where type=10311002 and BUSINESS_ID=#{pd.userId} 
+	<if test="pd.recordId  != null and pd.recordId  != ''">
+		and RECORD_ID=trim(#{pd.recordId})
+	</if>
+	ORDER BY CREATE_BY DESC
+</select>
+
+<select id="getNoticePriceList" parameterType="pd" resultType="pd">
+	select o.PRICE,u.`NAME`,DATE_FORMAT(o.create_date,'%Y-%m-%d %H:%i:%s') NOTICE_DATE
+	from offer_notice o  inner join sys_user u on o.driver_id=u.USER_ID
+	where o.source_id=#{sourceId}
+	and o.dealer_id=#{dealerId}
+</select>
+
+<select id="platformRechargeInOwnerlistPage" parameterType="page" resultType="pd">
+	select u.USER_ID,u.`NAME`,u.USER_NAME,u.TEL,IFNULL(u.AMOUNT,0) AMOUNT,u.USER_TYPE
+	from sys_user u
+	where u.USER_TYPE in(10131002,10131004)
+	and u.IS_MAIN_COUNT=10011001
+	and u.`STATUS`=10021001
+	and u.AUDIT_STATUS=10141002
+	<if test="pd.loginName != null and pd.loginName != ''">
+		and u.USER_NAME = trim(#{pd.loginName})
+	</if>
+	<if test="pd.chineName != null and pd.chineName != ''">
+		and u.NAME like  CONCAT('%',#{pd.chineName},'%')
+	</if>
+	<if test="pd.useType != null and pd.useType != ''">
+		and u.USER_TYPE = #{pd.useType}
+	</if>
+</select>
+
+<select id="platformRechargeInOwnerDilog"  parameterType="pd"   resultType="pd">
+	select u.USER_ID,u.`NAME`,u.USER_NAME,u.TEL,IFNULL(u.AMOUNT,0) AMOUNT,u.USER_TYPE
+	from sys_user u
+	where u.USER_TYPE in(10131002,10131004)
+	and u.IS_MAIN_COUNT=10011001
+	and u.`STATUS`=10021001
+	and u.AUDIT_STATUS=10141002
+</select>
+
+<update id="updateUserMoneyByUserIdInOwner" >
+	update sys_user set AMOUNT=IFNULL(AMOUNT,0)+#{priceNum},
+		update_by=#{myUser},
+		update_date=now() 
+	where user_id = #{userId}
+</update>
+
+<select id="feedbacklistPage" parameterType="page" resultType="pd">
+	SELECT
+		f.FEENDBACK_ID,
+		f.FEEDBACK_TYPE,
+		f.FEEDBACK_CONTENT,
+		u.`NAME`,
+		f.FEEDBACK_LINK,
+		DATE_FORMAT(f.CREATE_DATE,'%Y-%m-%d %H:%i:%s') CREATE_DATE
+	FROM
+		e_feedback f inner join sys_user u on f.FEEDBACK_USER=u.USER_ID
+	where 1=1
+	<if test="pd.feedUser != null and pd.feedUser != ''">
+		and u.`NAME` LIKE CONCAT('%',trim(#{pd.feedUser}),'%')
+	</if>
+	<if test="pd.feedLink != null and pd.feedLink != ''">
+		and f.FEEDBACK_LINK=trim(#{pd.feedLink})
+	</if>
+	<if test="pd.useType != null and pd.useType != ''">
+		and f.FEEDBACK_TYPE=trim(#{pd.useType})
+	</if>
+	ORDER BY f.CREATE_DATE DESC
+</select>
+
+<select id="feedbackDetail" parameterType="pd" resultType="pd">
+	SELECT
+			f.FEENDBACK_ID,
+			f.FEEDBACK_TYPE,
+			f.FEEDBACK_CONTENT,
+			u.`NAME`,
+			f.FEEDBACK_LINK,
+			DATE_FORMAT(f.CREATE_DATE,'%Y-%m-%d %H:%i:%s') CREATE_DATE
+		FROM
+			e_feedback f inner join sys_user u on f.FEEDBACK_USER=u.USER_ID
+		where f.FEENDBACK_ID=#{feedId}
+</select>
+
+<select id="feedbackPicList" parameterType="pd" resultType="pd">
+	select FILE_ID,URL
+	from e_files where OBJECT_ID=#{feedId}  and USE_TYPE=10181009
+</select>
+
+<select id="advertList" parameterType="page"  resultType="pd">
+	SELECT
+			DATE_FORMAT(a.CREATE_DATE,'%Y-%m-%d') CREATE_DATE,
+			a.NEW_ID,
+			a.NEW_TITLE,
+			a.CONTENT,
+			a.NEW_TYPE,
+			a.COLL_COUNT,
+			a.SEE_COUNT,
+			a.SHARED_COUNT,
+			a.FORWARD_COUNT,
+			a.CREATE_BY
+	FROM e_advert a
+	WHERE a.`STATUS`=10021001
+		<if test="pd.useType != null and pd.useType != ''">
+			and a.NEW_TYPE=#{pd.useType}
+		</if>
+		<if test="pd.chineName != null and pd.chineName != ''">
+			and a.NEW_TITLE like CONCAT('%',#{pd.chineName},'%')
+		</if>
+	ORDER BY a.CREATE_DATE desc
+</select>
+
+<insert id="addAdverMsg" parameterType="pd">
+	INSERT INTO e_advert 
+	(
+			NEW_ID,
+			NEW_TITLE,
+			CONTENT,
+			NEW_TYPE,
+			CREATE_BY,
+			CREATE_DATE,
+			NEW_DETAIL_TYPE,
+			NEW_LINK
+	)
+	VALUES
+	(
+		#{advertId},
+		#{title},
+		#{context},
+		#{advertType},
+		#{userName},
+		now(),
+		#{contentType},
+		#{link}
+	)
+</insert>
+
+<select id="adverDetialById" parameterType="pd" resultType="pd">
+	select 
+		a.NEW_ID,
+		a.NEW_TITLE,
+		a.CONTENT,
+		a.NEW_TYPE,
+		a.STATUS,
+		a.NEW_DETAIL_TYPE,
+		a.NEW_LINK
+	from E_ADVERT  a
+	where a.NEW_ID=#{advertId}
+</select>
+
+<select id="getAdverDetialPicById" parameterType="pd" resultType="java.lang.String">
+	select URL from e_files e
+	where e.USE_TYPE=10181010
+	and e.FILE_STATUS=10021001
+	and e.OBJECT_ID=#{advertId}
+</select>
+
+<update id="updateAdverMsg" parameterType="pd">
+	update E_ADVERT set 
+		NEW_TITLE=#{title},
+		CONTENT=#{context},
+		NEW_TYPE=#{advertType},
+		STATUS=#{advertStatus},
+		NEW_DETAIL_TYPE=#{contentType},
+		NEW_LINK=#{link},
+		UPDATE_BY=#{userName},
+		UPDATE_DATE=now()
+	where NEW_ID=#{advertId}
+</update>
+
+<update id="updateAdverFileMsg" parameterType="pd">
+	update e_files 
+		set FILE_STATUS=10021002 
+	where USE_TYPE=10181010 and OBJECT_ID=#{advertId}
+</update>
+
+</mapper>

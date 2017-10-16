@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="css/swiper.min.css" />
+<style type="text/css">
+ html, body {
+        position: relative;
+        height: 100%;
+        background-color: #F8F8F8;
+    }
+    body {
+        background: #eee;
+        font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+        font-size: 14px;
+        color:#000;
+        margin: 0;
+        padding: 0;
+        background-color: #F8F8F8;
+    }
+    .swiper-container {
+        width: 100%;
+        background-color: #0092D8;
+        height: 300px;
+        
+    }
+    .swiper-slide {
+        text-align: center;
+        font-size: 18px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+    }
+</style>
+</head>
+<body onload="checkBrower()">
+<div style="height: 10px;background-color: #F8F8F8;"></div>
+<!-- 头部 -->
+<div class="swiper-container">
+	<div class="swiper-wrapper">
+		<div class="swiper-slide"><img src="images/1.png"  width="1000px"/></div>
+		<div class="swiper-slide"><img src="images/2.png" width="1000px"/></div>
+		<div class="swiper-slide"><img src="images/3.png" width="1000px"/></div>
+	</div>
+	<div class="swiper-pagination"></div>
+	<div class="swiper-button-next"></div>
+	<div class="swiper-button-prev"></div>
+</div>
+<!-- 中间 -->
+<div style="height: 300px;position: relative;background-color: #F8F8F8;">
+		<div style="margin-top: 38px;position: relative;">
+			<div style="position: relative;left:20%;float: left;"><img src="images/downyunli.png"  width="170px" height="18px"/></div>
+			<div style="position: relative;left:42%;float: left;"><img src="images/downyunli1.png"  width="170px" height="18px"/></div>
+		</div>
+		<div style="clear: both;"></div>
+		<div style="margin-top: 30px;position: relative;">
+			<div style="position: relative;left:18%;float: left;">
+				<div style="width: 68%;float: left;text-align: right;"><img src="images/huzhu.png"   width="150px" height="150px" /></div>
+				<div style="width: 32%;float: left;text-align: left;position: relative;">
+					<div style="margin-top: 45px;position: relative;left:10px;cursor: pointer;">
+						<img src="images/anzhuo2.png"  style="max-width: 100%;" onclick="downloadApkOwner()"/>
+					</div>
+					<div style="margin-top: 25px;position: relative;left:10px;cursor: pointer;">
+						<img src="images/ios2.png"  style="max-width: 100%;" onclick="downloadIosOwner()"/>
+					</div>
+				</div>
+				<div style="clear: both;"></div>
+			</div>
+			<div style="position: relative;left:30%;float: left;">
+				<div style="width: 68%;float: left;text-align: right;"><img src="images/siji.png"  width="150px" height="150px" /></div>
+				<div style="width: 32%;float: left;text-align: left;position: relative;">
+					<div style="margin-top: 45px;position: relative;left:10px;cursor: pointer;">
+						<img src="images/anzhuo2.png"  style="max-width: 100%;" onclick="downloadApkDriver()"/>
+					</div>
+					<div style="margin-top: 25px;position: relative;left:10px;cursor: pointer;">
+						<img src="images/ios2.png"  style="max-width: 100%;" onclick="downloadIosDriver()"/>
+					</div>
+				</div>
+				<div style="clear: both;"></div>
+			</div>
+		</div>
+		<div style="clear: both;"></div>
+		<div style="margin-top: 25px;position: relative;">
+			<div style="position: relative;left:22%;float: left;"><img src="images/huozhu.png"  style="max-width: 70%;"/></div>
+			<div style="position: relative;left:39%;float: left;"><img src="images/yunli2.png"  style="max-width: 70%;"/></div>
+		</div>
+		<div style="clear: both;"></div>
+</div>
+<!-- 底部 -->
+<div style="position: relative;height:200px;background-image: url(images/bottom.png);background-repeat: no-repeat;background-size:cover;">
+	<div style="position: relative;left:20%;top:20px;font-family: 微软雅黑;font-size: 12px;">
+		<font color="#D0D0D0">
+			&nbsp;&nbsp;&nbsp;e运车致力于为每一位顾客提供更加高效、优质的汽车托运服务。顾客能通过e运车平台及时获取报价、比价，在线支付并实现对托运车辆的实时跟踪。
+			<br/>作为一个开放的平台，我们为广大客户和承运商提供一个面对面的交易机会，力求做到公开、透明，为广大用户提供可靠汽车托运解决方案。
+		</font>
+	</div>
+	<div style="position: relative;left:15%;top:30px;">
+		<img  src="images/bottom_icon.png"  style="max-width: 60%;">
+		<div style="position: absolute;;left:49%;top:35px;font-family: 微软雅黑;font-size: 18px;">
+			<font color="#D0D0D0">021-51357511</font>
+		</div>
+	</div>
+	<div  style="position: relative;left:25%;top:50px;font-family: 微软雅黑;font-size: 8px;">
+		<font color="#D0D0D0" >
+			地址：中国.上海市浦东大道727弄VIP大厦1号22楼             
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 邮政邮编：200120       
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;电话：+86 021-51357511       
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;备案号：沪ICP备15036960             <br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			Copyright 2017 CMAL(SHANGHAI).ALL right reserved.
+		</font>
+	</div>
+</div>
+<script src="js/swiper.min.js"></script>
+<script>
+ var swiper = new Swiper('.swiper-container', {
+     pagination: '.swiper-pagination',
+     nextButton: '.swiper-button-next',
+     prevButton: '.swiper-button-prev',
+     paginationClickable: true,
+     spaceBetween: 30,
+     centeredSlides: true,
+     autoplay: 3500,
+     speed:1000,
+     autoplayDisableOnInteraction: false
+ });
+ 
+ //货主apk下载
+ function downloadApkOwner(){
+	 window.location.href = 'eych.apk';
+ }
+ //货主IOS下载
+ function downloadIosOwner() {
+	 window.location.href = 'https://itunes.apple.com/cn/app/id1061880281';
+ }
+ 
+ //司机apk下载
+ function downloadApkDriver() {
+	 window.location.href = 'eycs.apk';
+ }
+ //司机IOS下载
+ function downloadIosDriver() {
+	 window.location.href = 'https://itunes.apple.com/cn/app/id1061880281';
+ }
+ 
+ function checkBrower() {
+    if(isWeiXin()){ 
+		 alert("请点击右上角按钮，选择浏览器打开");
+   } 
+ }
+ function isWeiXin(){ 
+	 var ua = window.navigator.userAgent.toLowerCase(); 
+	 if(ua.match(/MicroMessenger/i) == 'micromessenger'){ 
+	 return true; 
+	 }else{ 
+	 return false; 
+	 } 
+} 
+</script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppUserRegisterMapper">
+    <!-- 根据注册电话号码查询用户 -->
+	<select id="getUserListByPhone" parameterType="pd" resultType="pd" >
+	   SELECT  u.*  from  sys_user   u  WHERE  u.USER_NAME  =#{phone}  and u.status=10021001
+	</select>
+	<!-- 保存验证码 -->
+	<insert id="saveSendSmsCodeByPhone" parameterType="pd">
+	    insert   E_VER_CODE(
+	        VER_ID,
+			PHONE,
+			CREATE_DATE,
+			VERIFY_CODE,
+			VERIFY_STATUS,
+			VERIFY_DATE
+	    )values(
+	        #{VER_ID},
+	        #{phone},
+	        now(),
+	         #{VERIFY_CODE},
+	        #{VERIFY_STATUS},
+	        now()
+	    )
+	</insert>
+	<!-- 保存用户信息 -->
+	<insert id="saveUserToSysUser" parameterType="pd">
+	     insert into sys_user
+	     (
+	        USER_ID,
+			USER_NAME,
+			PASSWORD,
+			NAME,
+			<if test="sex != null and sex !=''">
+			SEX,
+			</if>
+			TEL,
+			STATUS,
+			AUDIT_STATUS,
+			CREATE_BY,
+			CREATE_DATE,
+			<if test="car_no != null and car_no !=''">
+			CARNUM,
+			</if>
+			REGISTER_DATE,
+			<if test="is_main_count !=null and is_main_count !=''">
+			IS_MAIN_COUNT,
+			</if>
+			<if test="dealer_id !=null and dealer_id !=''">
+			DEALER_ID,
+			</if>
+			USER_TYPE
+	      )values(
+	        #{user_id},
+	        #{phone},
+	        #{passwd},
+	        #{user_name},
+	        <if test="sex != null and sex !=''">
+	        #{sex},
+			</if>
+	        #{phone},
+	        #{status},
+	        #{audit_status},
+	        #{user_id},
+	        now(),
+	        <if test="car_no != null and car_no !=''">
+	        #{car_no},
+			</if>
+	        now(),
+	        <if test="is_main_count !=null and is_main_count !=''">
+	         #{is_main_count},
+			</if>
+			<if test="dealer_id !=null and dealer_id !=''">
+			#{dealer_id},
+			</if>
+	        #{user_type}
+	      )
+	</insert>
+	<!-- 根据车架号查询车辆信息 -->
+	<select id="getVehicleByVin"  parameterType="pd" resultType="pd" >
+	   SELECT  t.*  from  E_VEHICLE   t   where  t.vin =#{vin}
+	</select>
+	<!-- 保存车辆跟司机关系 -->
+	<insert id="saveEUserVehicle" parameterType="pd">
+	    insert  into  E_USER_VEHICLE(
+	     RELATION_ID,
+	     VEHICLE_ID,
+	     USER_ID
+	     )values(
+	       #{relation_id},
+	       #{vehicle_id},
+	       #{user_id}
+	     )
+	</insert>
+	<!-- 保存车辆信息 -->
+	<insert id="saveVehicle" parameterType="pd">
+	   insert  into E_VEHICLE (
+	    VEHICLE_ID,
+		VIN,
+		PLATE_NUM,
+<!-- 		MODEL_NAME, -->
+<!-- 		MODEL_CODE, -->
+		STATUS,
+		CAR_NUM,
+		CREATE_BY,
+		CREATE_DATE,
+		FACTORY_YEAR
+	   )values(
+	     #{vehicle_id},
+	     #{vin},
+	     #{plate_num},
+	     #{status},
+	     #{car_num},
+	     #{create_by},
+	     now(),
+	     #{factory_year}	   
+	   )
+	</insert>
+	
+	<!-- 根据密码登陆查询 -->
+	<select id="getUserByMessageInfoByPassword" parameterType="pd" resultType="pd">
+	   SELECT  u.*,getDealerNameByDealerId(u.dealer_id) DEALER_NAME  from   sys_user   u  where u.USER_NAME=#{user_name}  and u.STATUS=10021001 
+	</select>
+	<!-- 查询验证码 -->
+	<select id="getVerPhoneAndVerCode" parameterType="pd" resultType="pd">
+	   select  e.*  from  E_ver_code e  where e.phone=#{phone} and e.VERIFY_CODE=#{ver_code} and e.VERIFY_STATUS=10021001
+	</select>
+	
+	<!-- 短信登陆 -->
+	<select id="getUserByMessageInfoByVerCode" parameterType="pd" resultType="pd">
+	   SELECT  u.*,getDealerNameByDealerId(u.dealer_id) DEALER_NAME  from   sys_user   u  where u.USER_NAME=#{user_name}  and u.STATUS=10021001 
+	</select>
+	<!-- 根据车牌号查询车辆信息 -->
+	<select id="getEvehicleByCarNum" resultType="pd" parameterType="pd">
+	    select  e.*  from  E_VEHICLE  e  where e.PLATE_NUM =#{plate_num}
+	</select>
+	<!-- 根据车辆id修改车辆数据对应的附件信息 -->
+	<update id="updateEvehicleByVehicleId" parameterType="pd">
+	    update  E_FILES  e  set e.OBJECT_ID=#{vehicle_id}  where e.file_id 
+	    in  
+	     <foreach close=")" collection="file_ids" item="file_id" open="(" separator=",">
+              #{file_id}
+         </foreach>
+	</update>
+	
+	<!-- 根据经销商名称电话号码获取用户信息 -->
+	<select id="getSysUserByDealerNameAndPhone" parameterType="pd" resultType="pd">
+		SELECT
+			s.*, b.DEALER_NAME
+		FROM
+			sys_user s
+		INNER JOIN base_dealer b ON b.DEALER_ID = s.dealer_id
+		where  b.dealer_name=#{dealer_name} 
+		and b.status = 10021001 
+		and s.user_name=#{USER_NAME} 
+		 and s.status=10021001
+	</select>
+	
+	<!-- 根据电话修改用户状态 -->
+	<update id="updateSysUserByPhone" parameterType="pd">
+	   update  sys_user u set u.status=10021002  where u.user_name=#{phone}  and u.status=10021001
+	</update>
+	<!-- 根据经销商名称查询经销商信息 -->
+	<select id="getBaseDealerByDealerName" parameterType="pd" resultType="pd">
+	   select  b.*  from  base_dealer  b  where  b.dealer_name=#{dealer_name}  and   b.status=10021001
+	</select>
+	
+	<!-- 保存用户职位关系 -->
+	<insert id="saveSysUserPost" parameterType="pd">
+	   insert  into  SYS_USER_POST
+	   (
+	    USER_POST_ID,
+		USER_ID,
+		POST_ID,
+		CREATE_BY,
+		CREATE_DATE
+	    )values(
+	      #{user_post_id},
+	      #{user_id},
+	      #{post_id},
+	      #{user_id},
+	      now()
+	    )
+	</insert>
+	
+	<!-- 获取承运商 -->
+	<select id="getAllCarrierlistPage"  parameterType="page" resultType="pd">
+		SELECT
+			b.DEALER_CODE,
+			b.DEALER_ID,
+			b.DEALER_NAME,
+			b.DEALER_TYPE
+		FROM
+			base_dealer b
+		WHERE
+			b.DEALER_TYPE IN (10151001,10151002,10151004)
+		and b.STATUS = 10021001 
+		<if test="pd.dealer_name !=null and pd.dealer_name !='' ">
+		   and b.DEALER_NAME like  CONCAT('%',#{pd.dealer_name},'%')
+		</if>
+	</select>
+	
+	<!-- 根据手机号跟验证码修改状态 -->
+	<update id="updateEverCodeStatus" parameterType="pd">
+	   update  E_VER_CODE  e  set e.VERIFY_STATUS=10011002,e.VERIFY_DATE=now()  where e.PHONE=#{phone}  and e.VERIFY_CODE=#{ver_code}
+	</update>
+	<!-- 根据电话跟验证码查询验证码是否存在 -->
+	<select id="getEverCodeByPhoneAndVercode" parameterType="pd" resultType="pd">
+	    select  e.*  from  E_VER_CODE  e  where  e.PHONE=#{user_name}  and e.VERIFY_CODE=#{over_code} and e.create_date> DATE_ADD(NOW(), INTERVAL -30 MINUTE)  and e.VERIFY_STATUS=10021001  limit 0,1
+	</select>
+	
+	 <!-- 查询联系人列表 -->
+	<select id="getEcontacts" parameterType="pd" resultType="pd">
+	   select  e.*  from  E_CONTACTS  e  where e.user_id=#{user_id}   ORDER BY  e.CON_NAME  ASC
+	</select>
+	
+	<!-- 保存联系人 -->
+	 <insert id="saveEcontacts" parameterType="pd">
+	  insert  into  E_CONTACTS  (
+	    CONTACTS_ID,
+		USER_ID,
+		CON_NAME,
+		CON_PHONE,
+		CON_NUM,
+		ADD_DATE,
+		ADD_ID,
+		<if test="dealer_id != null and dealer_id !='' ">
+		DEALER_ID,
+		</if>
+		CREATE_BY,
+		CREATE_DATE
+	  )values(
+	    #{contacts_id},
+		#{user_id},
+		#{con_name},
+		#{con_phone},
+		#{con_num},
+		now(),
+		#{user_id},
+		<if test="dealer_id != null and dealer_id !='' ">
+		#{dealer_id},
+		</if>
+		#{user_id},
+		now()
+	  )
+	</insert>
+	<!-- 修改联系人 -->
+	<update id="updateEcontacts" parameterType="pd">
+	   update E_CONTACTS  e  set
+	    e.con_name=#{con_name},
+	   e.con_phone=#{con_phone},
+	   e.con_num=#{con_num},
+	   e.update_date=now(),
+	   e.update_by=#{user_id}
+	   where e.contacts_id=#{contacts_id}
+	</update>
+	<!-- 删除联系人 -->
+	<delete id="deleteEcontacts" parameterType="pd">
+	   delete  from  E_CONTACTS  where contacts_id=#{contacts_id}
+	</delete>
+	<!-- 获取司机列表 -->
+	<select id="getSysUserDriverList" parameterType="pd" resultType="pd">
+	   select  u.*,e.url  from  sys_user  u left join
+	    e_files e on 
+	     e.object_id=u.user_id 
+       and e.use_type=10181006
+	    where u.dealer_id=#{dealer_id}
+	   <if test="phone !=null and phone !='' ">
+	     and u.tel like  CONCAT('%',#{phone},'%')
+	   </if>
+	    and u.IS_MAIN_COUNT !=10011001  <!-- 不是主账号 -->
+	    and u.status=10021001
+	</select>
+	<!-- 绑定司机 -->
+	<insert id="bindDriver" parameterType="pd">
+	   insert  into  E_USER_VEHICLE
+	   (
+		   RELATION_ID,
+		   VEHICLE_ID,
+		   USER_ID
+	    )values(
+		    #{RELATION_ID},
+		    #{VEHICLE_ID},
+		    #{USER_ID}
+	    )
+	</insert>
+	
+	<!-- 取消绑定司机 -->
+	<delete id="unbindDriver" parameterType="pd" >
+	   delete  from  E_USER_VEHICLE  where user_id=#{unbind_user_id}
+	</delete>
+	<!-- 根据用户id获取绑定司机关系 -->
+	<select id="getEuserVehicleByUserId" parameterType="pd" resultType="pd">
+	   select  e.*  from  E_USER_VEHICLE  e  where e.user_id=#{user_id}
+	</select>
+	
+	<!-- 根据传入信息查询附件 -->
+	<select id="getPictureByInfo" parameterType="pd" resultType="pd">
+	  select   e.*  from  E_files  e  where  e.use_type=#{user_type}  and e.use_detial_type=#{use_detial_type} and e.object_id=#{object_id}  and e.FILE_STATUS=10021001   
+	</select>
+	<!-- 修改附件关联关系 -->
+    <update id="updateObjectIdbyFileId" parameterType="pd">
+       update E_files  e set e.object_id=#{object_id} where 
+       e.file_id  in
+       <foreach collection="file_ids" item="file_id" separator="," open="(" close=")" >
+           #{file_id}
+       </foreach>
+    </update>	
+    <!-- 修改密码 -->
+    <update id="updatePassword" parameterType="pd">
+       update  sys_user  u  set u.password =#{password}  where u.user_id=#{user_id} and u.status=10021001
+    </update>
+    <!-- 认证司机信息 -->
+    <update id="driverAuthentication" parameterType="pd">
+       update e_files  s set s.object_id=#{object_id},s.file_status=#{file_status}  where 
+       s.file_id in 
+       <foreach collection="file_ids" item="file_id" close=")" open="(" separator=",">
+         #{file_id}
+       </foreach>
+    </update>
+	<!-- 修改附件状态 -->
+	<update id="updateDriverAuthentication" parameterType="pd">
+	   update   e_files  s set s.file_status=#{file_status}  where s.object_id=#{object_id} and s.use_type !=10181006
+	</update>
+	
+	<!-- 修改用户审核状态 -->
+	<update id="updateSysUserStatusByUserId" parameterType="pd">
+	    update  sys_user  s set 
+	    s.audit_status=#{audit_status} 
+	    <if test="idcard_num !=null and idcard_num !=''">
+	     ,s.CARNUM=#{idcard_num} 
+	    </if>
+	    <if test="dealer_id !=null and dealer_id !=''">
+	     ,s.dealer_id=#{dealer_id} 
+	    </if>
+	     where s.user_id=#{user_id}
+	</update>
+	
+	 <!-- 认证车辆信息 -->
+    <update id="vehicleAuthentication" parameterType="pd">
+       update e_files  s set s.object_id=#{vehicle_id}  where 
+       e.file_id in 
+       <foreach collection="file_ids" item="file_id" close=")" open="(" separator=",">
+         #{file_id}
+       </foreach>
+    </update>
+    <!-- 根据经销商名字查询经销商 -->
+   <!--  <select id="getBaseDealerByDealerName" parameterType="pd" resultType="pd">
+     select  d.*  from  base_dealer d  where d.dealer_name =#{dealer_name}
+    </select> -->
+    <!-- 根据传入信息查询验证码 -->
+    <select id="getEverCodeByPhoneAndVercodeType" parameterType="pd" resultType="pd">
+      SELECT  e.*  from  e_ver_code  e where 1=1
+      <if test=" ver_code !=null and ver_code !='' ">
+         and e.VERIFY_CODE=#{ver_code}
+      </if>
+      <if test=" phone !=null and phone !='' ">
+         and e.phone=#{phone}
+      </if>
+      <if test=" verify_date !=null and verify_date !='' ">
+         and e.create_date> DATE_ADD(NOW(), INTERVAL -#{verify_date} MINUTE) 
+      </if>
+       and e.VERIFY_STATUS=10021001  limit 0,1
+    </select>
+    <!-- 根据电话查询用户信息 -->
+    <select id="getSysUserByPhone" parameterType="pd" resultType="pd">
+       select  u.*   from  sys_user  u  where u.user_name=#{phone} and u.status=10021001  limit 0,1
+    </select>
+    <!-- 根据用户id查询用户 -->
+    <select id="getSysUserByUserId" parameterType="pd" resultType="pd">
+       select  u.*,getDealerNameByDealerId(u.dealer_id) DEALER_NAME   from  sys_user  u  where u.user_id=#{user_id} and u.status=10021001
+    </select>
+    
+    <!-- 根据电话号码修改密码 -->
+    <update id="updatePasswordByPhoneNum" parameterType="pd">
+       update  sys_user  u  set u.password=#{password}  where u.user_name=#{phone}  and u.status=10021001
+    </update>
+     <!-- 根据用户id查询绑定信息 -->
+    <select id="getbindUserByUserId" parameterType="pd" resultType="pd">
+       select distinct  u.*,e.URL   from  sys_user u left join e_files e on 
+       e.object_id=u.user_id 
+       and e.use_type=10181006
+        where  u.user_id in (
+          select  eu.user_id  from  E_USER_VEHICLE  ee 
+          inner join E_USER_VEHICLE eu 
+           on eu.VEHICLE_ID=ee.VEHICLE_ID  where ee.user_id=#{user_id}
+        )
+        and u.IS_MAIN_COUNT !=10011001  <!-- 不是主账号 -->  
+    </select>
+    <!-- 根据user_id修改用户经销商id -->
+    <update id="updateSysUserDealerByUserId" parameterType="pd">
+       update  sys_user u set u.dealer_id=#{dealer_id}  where u.user_id=#{user_id}  and u.status=10021001
+    </update>
+    <!-- 根据车牌号查询车辆信息 -->
+    <select id="getEVehicleByPlateNum" parameterType="pd" resultType="pd">
+         SELECT  v.* from  e_vehicle  v where v.PLATE_NUM=#{plate_num}
+    </select>
+    <!-- 根据用户id查询用户信息 -->
+    <select id="getSysUserMessageByUserId" parameterType="pd" resultType="pd">
+       SELECT
+			u.*,v.VEHICLE_ID,v.CAR_NUM,v.PLATE_NUM,v.VIN,v.FACTORY_YEAR,v.EVALUATE_AVG,getHeadPic(u.user_id) HEAD_URL,getDealerNameByDealerId(u.dealer_id) DEALER_NAME
+		FROM
+			sys_user u
+		left JOIN e_user_vehicle ev ON ev.USER_ID = u.USER_ID
+		left JOIN e_vehicle v ON v.VEHICLE_ID = ev.VEHICLE_ID
+		WHERE  u.USER_ID=#{user_id}
+    </select>
+    
+    <!-- 根据类型获取图片列表 -->
+    <select id="getPictureByInfoList" parameterType="pd" resultType="pd">
+        select   e.*  from  E_files  e  where  e.use_type=#{use_type}   and e.object_id=#{object_id}  and e.FILE_STATUS=10021001
+    </select>
+    <!-- 修改附件关系 -->
+    <update id="updateEfilesByFileId" parameterType="pd">
+        update e_files e set e.object_id=#{object_id} 
+        where e.file_id in 
+       <foreach collection="file_ids"  item="file_id" close=")" open="(" separator=",">
+        	#{file_id}
+       </foreach>
+    </update>
+    <!-- 根据业务主键修改状态 -->
+    <update id="updatEfilesStatusByObjectId" parameterType="pd">
+        update e_files e set e.FILE_STATUS=#{file_status}  where e.OBJECT_ID=#{object_id}
+    </update>
+    <!-- 根据user_id查询用户 -->
+    <select id="getSysUserAuthenticationByUserId" parameterType="pd" resultType="pd">
+       select  u.*  from  sys_user u where  u.user_id=#{user_id}
+    </select>
+    <select id="getSysUserAuthenticationChildByUserId" parameterType="pd" resultType="pd">
+    	select  u.*, 
+    	(select count(USER_ID) from e_user_vehicle where USER_ID=u.USER_ID) AMOUNT_FLAG
+    	from  sys_user u where  u.user_id=#{child_id}
+    </select>
+     <!-- 根据object_id查询附件列表 -->
+    <select id="getFileUrlByObjectId" parameterType="pd" resultType="pd">
+       select e.*  from  e_files e where e.object_id=#{object_id}  and  e.file_status=10021001
+    </select>
+    <!-- 根据user_id获取职位信息 -->
+    <select id="getSysUserPostByUserId" parameterType="pd" resultType="pd">
+      select  p.*  from  sys_user_post  p  where p.user_id =#{USER_ID}  limit  0,1
+    </select>
+    
+    <select id="getSysPostByDealerId" parameterType="pd" resultType="pd">
+      select  p.*  from  sys_post p where p.org_id=#{dealer_id}
+    </select>
+    <!-- 根据user_id获取车辆信息 -->
+    <select id="getEvehicleByUserId" parameterType="pd" resultType="pd">
+      select  ev.*  from  E_USER_VEHICLE  e  INNER JOIN  e_vehicle ev ON ev.VEHICLE_ID=e.VEHICLE_ID 
+      where e.user_id=#{user_id}
+    </select>
+    <!-- 根据司机id查询该司机下存在几个绑定用户 -->
+    <select id="getEuserVehicleListByUserId"  resultType="pd"  parameterType="pd">
+      SELECT
+			ev.*
+		FROM
+			e_user_vehicle ev
+		WHERE
+			EXISTS (
+				SELECT
+					ee.RELATION_ID
+				FROM
+					e_user_vehicle ee
+				WHERE
+					ee.VEHICLE_ID = ev.VEHICLE_ID
+				AND ee.user_id =#{user_id} )
+    </select>
+    <!-- 根据车牌号查询车辆 -->
+    <select id="getEvehicleByPlateNum" parameterType="pd" resultType="pd">
+       select  e.*  from  E_VEHICLE  e  where e.PLATE_NUM=#{plate_num}
+    </select>
+    <!-- 根据子账号查询主账号信息 -->
+    <select id="getMainCountByChildCount" parameterType="pd" resultType="pd">
+        SELECT  u.*  FROM  e_user_vehicle  e INNER JOIN  e_user_vehicle ev ON ev.VEHICLE_ID=e.VEHICLE_ID
+			INNER JOIN sys_user  u ON u.USER_ID=e.USER_ID
+			WHERE  ev.USER_ID=#{USER_ID}
+			AND  u.USER_ID !=#{USER_ID}
+			and u.status=10021001
+    </select>
+    
+    <select id="getDealerMsgById" parameterType="pd" resultType="pd">
+    	select DEALER_ID,DEALER_TYPE from base_dealer where DEALER_ID= #{dealer_id} limit 0,1
+    </select>
+    
+</mapper>

@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AliPayMapper">
+	<!-- 根据订单id查询订单信息 -->
+	<select id="getEorderByOrderId" parameterType="pd" resultType="pd">
+		SELECT * FROM e_order e where e.order_id =#{order_id}
+	</select>
+    <!-- 保存支付宝交易记录 -->
+    <insert id="saveAlipayAmount" parameterType="pd">
+       insert into   E_ALIPAY
+         <trim prefix="(" suffix=")" suffixOverrides=",">
+              <if test=" RECORD_ID !=null and RECORD_ID !='' ">
+	            RECORD_ID,
+              </if>
+              <if test=" NOTIFY_ID !=null and NOTIFY_ID !='' ">
+	            NOTIFY_ID,
+              </if>
+              <if test=" NOTIFY_TYPE !=null and NOTIFY_TYPE !='' ">
+	            NOTIFY_TYPE,
+              </if>
+              <if test=" NOTIFY_TIME !=null and NOTIFY_TIME !='' ">
+	            NOTIFY_TIME,
+              </if>
+              <if test=" APP_ID !=null and APP_ID !='' ">
+	            APP_ID,
+              </if>
+              <if test=" CHARSET !=null and CHARSET !='' ">
+	            CHARSET,
+              </if>
+              <if test=" VERSION !=null and VERSION !='' ">
+	            VERSION,
+              </if>
+              <if test=" SIGN !=null and SIGN !='' ">
+	            SIGN,
+              </if>
+              <if test=" SIGN_TYPE !=null and SIGN_TYPE !='' ">
+	            SIGN_TYPE,
+              </if>
+              <if test=" TRADE_NO !=null and TRADE_NO !='' ">
+	            TRADE_NO,
+              </if>
+              <if test=" OUT_BIZ_NO !=null and OUT_BIZ_NO !='' ">
+	            OUT_BIZ_NO,
+              </if>
+              <if test=" SUBJECT !=null and SUBJECT !='' ">
+	            SUBJECT,
+              </if>
+              <if test=" SELLER_EMAIL !=null and SELLER_EMAIL !='' ">
+	            SELLER_EMAIL,
+              </if>
+              <if test=" SELLER_ID !=null and SELLER_ID !='' ">
+	            SELLER_ID,
+              </if>
+              <if test=" BUYER_ID !=null and BUYER_ID !='' ">
+	            BUYER_ID,
+              </if>
+              <if test=" BUYER_LOGON_ID !=null and BUYER_LOGON_ID !='' ">
+	            BUYER_LOGON_ID,
+              </if>
+              <if test=" TOTAL_AMOUNT !=null and TOTAL_AMOUNT !='' ">
+	            TOTAL_AMOUNT,
+              </if>
+              <if test=" RECEIPT_AMOUNT !=null and RECEIPT_AMOUNT !='' ">
+	            RECEIPT_AMOUNT,
+              </if>
+              <if test=" INVOICE_AMOUNT !=null and INVOICE_AMOUNT !='' ">
+	            INVOICE_AMOUNT,
+              </if>
+              <if test=" BUYER_PAY_AMOUNT !=null and BUYER_PAY_AMOUNT !='' ">
+	            BUYER_PAY_AMOUNT,
+              </if>
+              <if test=" POINT_AMOUNT !=null and POINT_AMOUNT !='' ">
+	            POINT_AMOUNT,
+              </if>
+              <if test=" REFUND_FEE !=null and REFUND_FEE !='' ">
+	            REFUND_FEE,
+              </if>
+              <if test=" TRADE_STATUS !=null and TRADE_STATUS !='' ">
+	            TRADE_STATUS,
+              </if>
+              <if test=" BODY !=null and BODY !='' ">
+	            BODY,
+              </if>
+              <if test=" OUT_TRADE_NO !=null and OUT_TRADE_NO !='' ">
+	            OUT_TRADE_NO,
+              </if>
+              <if test=" GMT_CREATE !=null and GMT_CREATE !='' ">
+	            GMT_CREATE,
+              </if>
+              <if test=" GMT_PAYMENT !=null and GMT_PAYMENT !='' ">
+	            GMT_PAYMENT,
+              </if>
+              <if test=" GMT_REFUND !=null and GMT_REFUND !='' ">
+	            GMT_REFUND,
+              </if>
+              <if test=" USER_ID !=null and USER_ID !='' ">
+	            USER_ID,
+              </if>
+              <if test=" FUND_BILL_LIST !=null and FUND_BILL_LIST !='' ">
+	            FUND_BILL_LIST,
+              </if>
+              <if test=" GMT_CLOSE !=null and GMT_CLOSE !='' ">
+	            GMT_CLOSE,
+              </if>
+              <if test=" PASSBACK_PARAMS !=null and PASSBACK_PARAMS !='' ">
+	            PASSBACK_PARAMS,
+              </if>
+              <if test=" VOUCHER_DETAIL_LIST !=null and VOUCHER_DETAIL_LIST !='' ">
+	            VOUCHER_DETAIL_LIST,
+              </if>
+              <if test=" ORDER_ID !=null and ORDER_ID !='' ">
+	            ORDER_ID,
+              </if>
+         </trim>
+          <trim prefix="values (" suffix=")" suffixOverrides=",">
+              <if test=" RECORD_ID !=null and RECORD_ID !='' ">
+	            #{RECORD_ID},
+              </if>
+              <if test=" NOTIFY_ID !=null and NOTIFY_ID !='' ">
+	            #{NOTIFY_ID},
+              </if>
+              <if test=" NOTIFY_TYPE !=null and NOTIFY_TYPE !='' ">
+	            #{NOTIFY_TYPE},
+              </if>
+              <if test=" NOTIFY_TIME !=null and NOTIFY_TIME !='' ">
+	            #{NOTIFY_TIME},
+              </if>
+              <if test=" APP_ID !=null and APP_ID !='' ">
+	            #{APP_ID},
+              </if>
+              <if test=" CHARSET !=null and CHARSET !='' ">
+	            #{CHARSET},
+              </if>
+              <if test=" VERSION !=null and VERSION !='' ">
+	            #{VERSION},
+              </if>
+              <if test=" SIGN !=null and SIGN !='' ">
+	            #{SIGN},
+              </if>
+              <if test=" SIGN_TYPE !=null and SIGN_TYPE !='' ">
+	            #{SIGN_TYPE},
+              </if>
+              <if test=" TRADE_NO !=null and TRADE_NO !='' ">
+	            #{TRADE_NO},
+              </if>
+              <if test=" OUT_BIZ_NO !=null and OUT_BIZ_NO !='' ">
+	            #{OUT_BIZ_NO},
+              </if>
+              <if test=" SUBJECT !=null and SUBJECT !='' ">
+	            #{SUBJECT},
+              </if>
+              <if test=" SELLER_EMAIL !=null and SELLER_EMAIL !='' ">
+	            #{SELLER_EMAIL},
+              </if>
+              <if test=" SELLER_ID !=null and SELLER_ID !='' ">
+	            #{SELLER_ID},
+              </if>
+              <if test=" BUYER_ID !=null and BUYER_ID !='' ">
+	            #{BUYER_ID},
+              </if>
+              <if test=" BUYER_LOGON_ID !=null and BUYER_LOGON_ID !='' ">
+	            #{BUYER_LOGON_ID},
+              </if>
+              <if test=" TOTAL_AMOUNT !=null and TOTAL_AMOUNT !='' ">
+	            #{TOTAL_AMOUNT},
+              </if>
+              <if test=" RECEIPT_AMOUNT !=null and RECEIPT_AMOUNT !='' ">
+	            #{RECEIPT_AMOUNT},
+              </if>
+              <if test=" INVOICE_AMOUNT !=null and INVOICE_AMOUNT !='' ">
+	            #{INVOICE_AMOUNT},
+              </if>
+              <if test=" BUYER_PAY_AMOUNT !=null and BUYER_PAY_AMOUNT !='' ">
+	            #{BUYER_PAY_AMOUNT},
+              </if>
+              <if test=" POINT_AMOUNT !=null and POINT_AMOUNT !='' ">
+	            #{POINT_AMOUNT},
+              </if>
+              <if test=" REFUND_FEE !=null and REFUND_FEE !='' ">
+	            #{REFUND_FEE},
+              </if>
+              <if test=" TRADE_STATUS !=null and TRADE_STATUS !='' ">
+	            #{TRADE_STATUS},
+              </if>
+              <if test=" BODY !=null and BODY !='' ">
+	            #{BODY},
+              </if>
+              <if test=" OUT_TRADE_NO !=null and OUT_TRADE_NO !='' ">
+	            #{OUT_TRADE_NO},
+              </if>
+              <if test=" GMT_CREATE !=null and GMT_CREATE !='' ">
+	            #{GMT_CREATE},
+              </if>
+              <if test=" GMT_PAYMENT !=null and GMT_PAYMENT !='' ">
+	            #{GMT_PAYMENT},
+              </if>
+              <if test=" GMT_REFUND !=null and GMT_REFUND !='' ">
+	            #{GMT_REFUND},
+              </if>
+              <if test=" USER_ID !=null and USER_ID !='' ">
+	            #{USER_ID},
+              </if>
+              <if test=" FUND_BILL_LIST !=null and FUND_BILL_LIST !='' ">
+	            #{FUND_BILL_LIST},
+              </if>
+              <if test=" GMT_CLOSE !=null and GMT_CLOSE !='' ">
+	            #{GMT_CLOSE},
+              </if>
+              <if test=" PASSBACK_PARAMS !=null and PASSBACK_PARAMS !='' ">
+	            #{PASSBACK_PARAMS},
+              </if>
+              <if test=" VOUCHER_DETAIL_LIST !=null and VOUCHER_DETAIL_LIST !='' ">
+	            #{VOUCHER_DETAIL_LIST},
+              </if>
+              <if test=" ORDER_ID !=null and ORDER_ID !='' ">
+	            #{ORDER_ID},
+              </if>
+         </trim>
+    </insert>
+    <!-- 修改支付宝订单记录表 -->
+    <update id="eidtEalipayByRecordId" parameterType="pd">
+       update  E_ALIPAY   e  set 
+       <trim  suffixOverrides=",">
+             <if test=" NOTIFY_ID !=null and NOTIFY_ID !='' ">
+	            e.NOTIFY_ID=#{NOTIFY_ID},
+              </if>
+              <if test=" NOTIFY_TYPE !=null and NOTIFY_TYPE !='' ">
+	            e.NOTIFY_TYPE=#{NOTIFY_TYPE},
+              </if>
+              <if test=" NOTIFY_TIME !=null and NOTIFY_TIME !='' ">
+	            e.NOTIFY_TIME=#{NOTIFY_TIME},
+              </if>
+              <if test=" APP_ID !=null and APP_ID !='' ">
+	            e.APP_ID=#{APP_ID},
+              </if>
+              <if test=" CHARSET !=null and CHARSET !='' ">
+	            e.CHARSET=#{CHARSET},
+              </if>
+              <if test=" VERSION !=null and VERSION !='' ">
+	            e.VERSION=#{VERSION},
+              </if>
+              <if test=" SIGN !=null and SIGN !='' ">
+	            e.SIGN=#{SIGN},
+              </if>
+              <if test=" SIGN_TYPE !=null and SIGN_TYPE !='' ">
+	            e.SIGN_TYPE=#{SIGN_TYPE},
+              </if>
+              <if test=" TRADE_NO !=null and TRADE_NO !='' ">
+	            e.TRADE_NO=#{TRADE_NO},
+              </if>
+              <if test=" OUT_BIZ_NO !=null and OUT_BIZ_NO !='' ">
+	            e.OUT_BIZ_NO=#{OUT_BIZ_NO},
+              </if>
+              <if test=" SUBJECT !=null and SUBJECT !='' ">
+	            e.SUBJECT=#{SUBJECT},
+              </if>
+              <if test=" SELLER_EMAIL !=null and SELLER_EMAIL !='' ">
+	            e.SELLER_EMAIL=#{SELLER_EMAIL},
+              </if>
+              <if test=" SELLER_ID !=null and SELLER_ID !='' ">
+	            e.SELLER_ID=#{SELLER_ID},
+              </if>
+              <if test=" BUYER_ID !=null and BUYER_ID !='' ">
+	            e.BUYER_ID=#{BUYER_ID},
+              </if>
+              <if test=" BUYER_LOGON_ID !=null and BUYER_LOGON_ID !='' ">
+	            e.BUYER_LOGON_ID=#{BUYER_LOGON_ID},
+              </if>
+              <if test=" TOTAL_AMOUNT !=null and TOTAL_AMOUNT !='' ">
+	            e.TOTAL_AMOUNT=#{TOTAL_AMOUNT},
+              </if>
+              <if test=" RECEIPT_AMOUNT !=null and RECEIPT_AMOUNT !='' ">
+	            e.RECEIPT_AMOUNT=#{RECEIPT_AMOUNT},
+              </if>
+              <if test=" INVOICE_AMOUNT !=null and INVOICE_AMOUNT !='' ">
+	            e.INVOICE_AMOUNT=#{INVOICE_AMOUNT},
+              </if>
+              <if test=" BUYER_PAY_AMOUNT !=null and BUYER_PAY_AMOUNT !='' ">
+	            e.BUYER_PAY_AMOUNT=#{BUYER_PAY_AMOUNT},
+              </if>
+              <if test=" POINT_AMOUNT !=null and POINT_AMOUNT !='' ">
+	            e.POINT_AMOUNT=#{POINT_AMOUNT},
+              </if>
+              <if test=" REFUND_FEE !=null and REFUND_FEE !='' ">
+	            e.REFUND_FEE=#{REFUND_FEE},
+              </if>
+              <if test=" TRADE_STATUS !=null and TRADE_STATUS !='' ">
+	            e.TRADE_STATUS=#{TRADE_STATUS},
+              </if>
+              <if test=" BODY !=null and BODY !='' ">
+	            e.BODY=#{BODY},
+              </if>
+              <if test=" OUT_TRADE_NO !=null and OUT_TRADE_NO !='' ">
+	            e.OUT_TRADE_NO=#{OUT_TRADE_NO},
+              </if>
+              <if test=" GMT_CREATE !=null and GMT_CREATE !='' ">
+	            e.GMT_CREATE=#{GMT_CREATE},
+              </if>
+              <if test=" GMT_PAYMENT !=null and GMT_PAYMENT !='' ">
+	            e.GMT_PAYMENT=#{GMT_PAYMENT},
+              </if>
+              <if test=" GMT_REFUND !=null and GMT_REFUND !='' ">
+	            e.GMT_REFUND=#{GMT_REFUND},
+              </if>
+              <if test=" USER_ID !=null and USER_ID !='' ">
+	            e.USER_ID=#{USER_ID},
+              </if>
+              <if test=" FUND_BILL_LIST !=null and FUND_BILL_LIST !='' ">
+	            e.FUND_BILL_LIST=#{FUND_BILL_LIST},
+              </if>
+              <if test=" GMT_CLOSE !=null and GMT_CLOSE !='' ">
+	            e.GMT_CLOSE=#{GMT_CLOSE},
+              </if>
+              <if test=" PASSBACK_PARAMS !=null and PASSBACK_PARAMS !='' ">
+	            e.PASSBACK_PARAMS=#{PASSBACK_PARAMS},
+              </if>
+              <if test=" VOUCHER_DETAIL_LIST !=null and VOUCHER_DETAIL_LIST !='' ">
+	            e.VOUCHER_DETAIL_LIST=#{VOUCHER_DETAIL_LIST},
+              </if>
+              <if test=" ORDER_ID !=null and ORDER_ID !='' ">
+	            e.ORDER_ID=#{ORDER_ID},
+              </if>
+         </trim>
+         where   e.RECORD_ID=#{RECORD_ID}            
+    </update>
+    <!-- 根据user_id查询钱包的钱 -->
+    <select id="getAmoutByuserId" parameterType="pd" resultType="pd">
+       select  u.*  from  sys_user u  where  u.user_id=#{user_id}  and u.status = 10021001
+    </select>
+    <!-- 根据支付宝记录表主键获取记录 -->
+    <select id="getEalipayByRecordId" parameterType="pd" resultType="pd">
+        select  e.*  from  E_ALIPAY  e  where  e.RECORD_ID=#{RECORD_ID}
+    </select>
+    <!-- 保存钱包记录表 -->
+    <insert id="saveEamountRecord" parameterType="pd">
+        insert   into  E_AMOUNT_RECORD
+        <trim  prefix="(" suffix=")" suffixOverrides=",">
+            <if test=" RECORD_ID !=null and RECORD_ID !='' ">
+            RECORD_ID,
+            </if>
+            <if test=" ADD_DATE !=null and ADD_DATE !='' ">
+            ADD_DATE,
+            </if>
+            <if test=" TYPE !=null and TYPE !='' ">
+            TYPE,
+            </if>
+            <if test=" AMOUNT !=null and AMOUNT !='' ">
+            AMOUNT,
+            </if>
+            <if test=" USER_ID !=null and USER_ID !='' ">
+            USER_ID,
+            </if>
+            <if test=" USER_NAME !=null and USER_NAME !='' ">
+            USER_NAME,
+            </if>
+            <if test=" BUSINESS_TYPE !=null and BUSINESS_TYPE !='' ">
+            BUSINESS_TYPE,
+            </if>
+            <if test=" BUSINESS_ID !=null and BUSINESS_ID !='' ">
+            BUSINESS_ID,
+            </if>
+            <if test=" DEPOSIT_ID !=null and DEPOSIT_ID !='' ">
+            DEPOSIT_ID,
+            </if>
+            <if test=" CREATE_BY !=null and CREATE_BY !='' ">
+            CREATE_BY,
+            </if>
+            <if test=" CREATE_DATE !=null and CREATE_DATE !='' ">
+            CREATE_DATE,
+            </if>
+            <if test=" UPDATE_BY !=null and UPDATE_BY !='' ">
+            UPDATE_BY,
+            </if>
+            <if test=" UPDATE_DATE !=null and UPDATE_DATE !='' ">
+            UPDATE_DATE,
+            </if>
+        </trim>
+        <trim  prefix="values (" suffix=")" suffixOverrides=",">
+            <if test=" RECORD_ID !=null and RECORD_ID !='' ">
+            #{RECORD_ID},
+            </if>
+            <if test=" ADD_DATE !=null and ADD_DATE !='' ">
+            #{ADD_DATE},
+            </if>
+            <if test=" TYPE !=null and TYPE !='' ">
+            #{TYPE},
+            </if>
+            <if test=" AMOUNT !=null and AMOUNT !='' ">
+            #{AMOUNT},
+            </if>
+            <if test=" USER_ID !=null and USER_ID !='' ">
+            #{USER_ID},
+            </if>
+            <if test=" USER_NAME !=null and USER_NAME !='' ">
+            #{USER_NAME},
+            </if>
+            <if test=" BUSINESS_TYPE !=null and BUSINESS_TYPE !='' ">
+            #{BUSINESS_TYPE},
+            </if>
+            <if test=" BUSINESS_ID !=null and BUSINESS_ID !='' ">
+            #{BUSINESS_ID},
+            </if>
+            <if test=" DEPOSIT_ID !=null and DEPOSIT_ID !='' ">
+            #{DEPOSIT_ID},
+            </if>
+            <if test=" CREATE_BY !=null and CREATE_BY !='' ">
+            #{CREATE_BY},
+            </if>
+            <if test=" CREATE_DATE !=null and CREATE_DATE !='' ">
+            #{CREATE_DATE},
+            </if>
+            <if test=" UPDATE_BY !=null and UPDATE_BY !='' ">
+            #{UPDATE_BY},
+            </if>
+            <if test=" UPDATE_DATE !=null and UPDATE_DATE !='' ">
+            #{UPDATE_DATE},
+            </if>
+        </trim>
+    </insert>
+    <!-- 给用户钱包中加支付宝充值的钱 -->
+    <update id="updateSysUserAmountByUserId"  parameterType="pd">
+        update   sys_user  u  set u.amount=u.amount+#{AMOUNT}  where   u.USER_ID=#{USER_ID}
+    </update>
+    <!-- 扣除定金 -->
+    <update id="debitAmountByUserId" parameterType="pd">
+        update  sys_user  u  set  u.amount=u.amount-#{amount}  where  u.user_id=#{user_id}
+    </update>
+    <update id="udapteEorderByOrderId" parameterType="pd">
+       update  e_order  e  set e.STATUS=#{status}   where  e.order_id =#{order_id}
+    </update>
+    
+</mapper>

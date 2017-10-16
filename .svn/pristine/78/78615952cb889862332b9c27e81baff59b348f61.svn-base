@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppLocationMapper">
+   <!-- 根据订单id查询订单 -->
+   <select id="getEOrderByOrderIdsAndstatus" parameterType="pd" resultType="pd">
+      select e.ORDER_ID  from  e_order  e  where e.status=10211006
+      and  e.driver_id=#{user_id}
+     <!--   and e.order_id  in
+      <foreach collection="order_ids" item="order_id" open="(" close=")" separator=",">
+          #{order_id}
+      </foreach> -->
+   </select>
+   
+   <insert id="saveLocationAddress" parameterType="pd">
+      insert into E_LOCATION (
+        LOCATION_ID,
+		ORDER_ID,
+		PROJECT_NAME,
+		PROJECT_CODE,
+		CONMENT,
+		LOGITUDE,
+		LATITUDE,
+		ADDRESS,
+		UP_TYPE,
+		TYPE
+      )values
+      <foreach collection="orderList" item="ORDER_ID" separator=",">
+        (getPrimary(),
+		#{ORDER_ID},
+		#{project_name},
+		#{project_code},
+		now(),
+		#{logitude},
+		#{latitude},
+		#{address},
+		10231002,
+		10241002)
+      </foreach>
+   </insert>
+   <!-- 根据用户id查询用户 -->
+   <select id="getSysUserByUserId" parameterType="pd" resultType="pd">
+        select  u.*  from  sys_user u  where u.user_id =#{user_id} 
+   </select>
+  
+</mapper>

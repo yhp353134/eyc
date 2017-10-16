@@ -1,0 +1,55 @@
+.cm-menu{
+
+}
+/**
+外层列表
+ */
+.cm-menu ul{
+    margin: 0px;
+    padding: 0px;
+    list-style: none;
+}
+.cm-menu ul h2{
+    /*text-align: center;*/
+    background-color: #888888;
+    font-weight:normal;
+    font-size: 16px;
+    padding: 10px 0 10px;
+    color: white;
+}
+
+.cm-menu ul li {
+    text-indent:1em;
+    white-space:nowrap;
+    cursor: pointer;
+}
+.cm-menu ul li a{
+    outline: none;
+    display: block;
+    margin:1px 0;
+    text-decoration:none;
+    padding: 5px;
+    font-size: 14px;
+}
+.cm-menu ul li a:hover{
+    background-color:#659BED;
+    background-image:none;
+    color: white;
+}
+.chooesbox{
+    background-color:#659BED;
+    background-image:none;
+    color: beige;
+}
+.nochooesbox{
+    color: #a8a8a8;
+}
+#phone{
+    border-radius: 5px;
+    padding: 10px;
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: grey;
+    color: white;
+}

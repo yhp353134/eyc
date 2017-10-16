@@ -1,0 +1,1102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppELineMapper">
+
+	<!-- ***************************************************路线相关*************************************/ -->
+
+
+	<!-- 添加线路 -->
+	<insert id="addRoute" parameterType="pd">
+		insert into E_LINE(
+		CAR_ID,
+		SRC_CITY,
+		SRC_CITY_ID,
+		DES_CITY,
+		DES_CITY_ID,
+		COMPANY_CODE,
+		STATUS,
+		FREQUENCY,
+		VEHICLE_ID,
+		ADD_ID,
+		ADD_DATE
+
+		) values(
+		#{carId},
+		(select REGION_NAME from E_REGION where REGION_CODE = #{srcRegionCode}) ,
+		#{srcRegionCode},
+		(select REGION_NAME from E_REGION where REGION_CODE = #{desRegionCode}) ,
+		#{desRegionCode},
+		(select distinct bd.dealer_code from BASE_DEALER bd where bd.dealer_id =
+		(select dealer_id from sys_user su where su.user_id = #{userId})),
+		#{status},
+		#{frequency},
+		(select distinct VEHICLE_ID from E_USER_VEHICLE t where t.USER_ID
+		=#{userId}),
+		#{addId},
+		#{addDate}
+
+		)
+	</insert>
+
+	<!-- 修改线路 -->
+	<update id="editRoute" parameterType="pd">
+		update E_LINE set
+		SRC_CITY = (select REGION_NAME from E_REGION where REGION_CODE =
+		#{srcRegionCode}) ,
+		SRC_CITY_ID = #{srcRegionCode},
+		DES_CITY = (select REGION_NAME from E_REGION where REGION_CODE =
+		#{desRegionCode}) ,
+		DES_CITY_ID = #{desRegionCode},
+		FREQUENCY = #{frequency},
+		UPDATE_ID = #{updateId},
+		UPDATE_DATE = #{updateDate},
+		IS_BACK = #{isBack},
+		STATUS = #{status}
+		where CAR_ID = #{carId}
+	</update>
+
+	<!-- 删除线路 -->
+	<delete id="deleteRoute" parameterType="pd">
+		delete from E_LINE where CAR_ID = #{carId}
+	</delete>
+
+
+	<!-- 启/禁用线路 -->
+	<update id="switchRoute" parameterType="pd">
+		update E_LINE set
+		STATUS = #{status},
+		UPDATE_ID = #{updateId},
+		UPDATE_DATE = #{updateDate}
+		where CAR_ID = #{carId}
+	</update>
+
+	<!-- 查询当前用于所有路线 -->
+	<select id="selectLine" parameterType="pd" resultType="pd">
+		select
+		el.CAR_ID,
+		el.SRC_CITY,
+		el.SRC_CITY_ID,
+		el.DES_CITY_ID,
+		el.DES_CITY,
+		el.FREQUENCY,
+		el.STATUS
+		from e_line el
+		where el.VEHICLE_ID
+		in (select euv.VEHICLE_ID from E_USER_VEHICLE euv where euv.user_id =#{userId})
+	</select>
+
+
+	<!-- *************************************运力相关***********************************************/ -->
+
+
+	<!-- 获取运力中心 -->
+	<select id="selectRoutelistPage" parameterType="page" resultType="pd">
+		select 
+			el.CAR_ID,
+			ev.PLATE_NUM,
+			el.FREQUENCY,
+			bd.DEALER_NAME,
+			el.SRC_CITY,
+			el.DES_CITY,
+			EV.CAR_NUM,
+			ev.EVALUATE_AVG,
+			ef.URL
+		from e_line el
+		left join E_VEHICLE ev on el.VEHICLE_ID = ev.VEHICLE_ID
+		left join BASE_DEALER bd on el.COMPANY_CODE = bd.DEALER_ID
+		left join E_FILES ef on el.VEHICLE_ID = ef.OBJECT_ID
+
+		and ef.USE_DETIAL_TYPE = #{pd.useDetialType}
+		and ef.USE_TYPE = #{pd.useType}
+		and ef.file_status = #{pd.fileStatus}
+		where el.status = #{pd.status}
+		<if test="pd.desRegionCode !=null and pd.desRegionCode != ''">
+			and el.DES_CITY_ID = #{pd.desRegionCode}
+		</if>
+		<if test="pd.srcRegionCode != null and pd.srcRegionCode != ''">
+			and el.SRC_CITY_id = #{pd.srcRegionCode}
+		</if>
+		<if test="pd.carNum != null and pd.carNum != ''">
+			and ev.CAR_NUM = #{pd.carNum}
+		</if>
+		order by el.ADD_DATE DESC
+	</select>
+
+	<!-- 获取运力中心详情 -->
+	<select id="selectRouteDetail" parameterType="pd" resultType="pd">
+		select 
+			ev.PLATE_NUM, 
+			bd.DEALER_NAME,
+			ev.CAR_NUM,
+			count(eo.order_id) as SERVICE_COUNT,
+			ef.URL
+		from e_line el
+		left join E_VEHICLE ev on el.VEHICLE_ID = ev.VEHICLE_ID
+		left join BASE_DEALER bd on el.COMPANY_CODE = bd.DEALER_CODE
+		left join E_ORDER eo on el.VEHICLE_ID = eo.VEHICLE_ID  and eo.`STATUS` in(10211009,10211010,10211011)
+		left join E_FILES ef on ef.USE_DETIAL_TYPE = #{useDetialType}
+			and ef.USE_TYPE = #{useType}
+			and ef.file_status = #{fileStatus}
+			and el.VEHICLE_ID = ef.OBJECT_ID
+		where el.car_id = #{carId}
+		group by ev.PLATE_NUM,bd.DEALER_NAME,ev.CAR_Num
+	</select>
+	
+	<!-- 获取运力中心详情 用用户Id-->
+	<select id="selectRouteDetailByUserId" parameterType="pd" resultType="pd">
+		select  
+			ev.PLATE_NUM, 
+			bd.DEALER_NAME,
+			ev.CAR_NUM,
+			count(eo.order_id) as SERVICE_COUNT,
+			ef.URL
+		from e_vehicle ev,sys_user su
+		left join BASE_DEALER bd on su.dealer_id = bd.dealer_id,
+		e_user_vehicle  euv 
+		left join E_ORDER eo on euv.VEHICLE_ID = eo.VEHICLE_ID and eo.`STATUS` in(10211009,10211010,10211011)
+		left join E_FILES ef on ef.USE_DETIAL_TYPE = #{useDetialType}
+			and ef.USE_TYPE = #{useType}
+			and ef.file_status = #{fileStatus}
+			and euv.VEHICLE_ID = ef.OBJECT_ID
+		where euv.VEHICLE_ID = ev.VEHICLE_ID
+		and euv.user_id = su.user_id
+		and su.user_id = #{userId}
+		group by ev.PLATE_NUM,bd.DEALER_NAME,ev.CAR_NUM,ef.URL
+	</select>
+	
+	<!-- 获取运力中心详情车主信息 -->
+	<select id="selectDriverDetail" parameterType="pd" resultType="pd">
+		select NAME ,
+		TEL ,
+		ef.URL
+		from SYS_USER su
+		left join E_FILES ef
+		on su.user_id = ef.OBJECT_ID
+		and ef.USE_DETIAL_TYPE = #{useDetialType}
+		and ef.USE_TYPE = #{useType}
+		and ef.file_status = #{fileStatus}
+		where user_id in (select USER_ID from E_USER_VEHICLE t where t.VEHICLE_ID =
+		<if test="carId != null and carId != ''">
+			(select VEHICLE_ID from e_line where car_id = #{carId} ))
+		</if>
+		<if test="userId != null and userId!= ''">
+			(select VEHICLE_ID from e_user_vehicle where USER_ID = #{userId} ) )
+		</if>
+		
+	</select>
+
+
+	<!-- 获取运力中心详情车主路线信息 -->
+	<select id="selectLineDetail" parameterType="pd" resultType="pd">
+		select SRC_CITY,DES_CITY from E_LINE where VEHICLE_ID = (select
+		VEHICLE_ID from E_LINE where CAR_ID = #{carId})
+	</select>
+
+	<!-- 获取运力中心详情车辆图片 -->
+	<select id="selectCarDetail" parameterType="pd" resultType="pd">
+		select ef.URL from E_FILES ef where ef.USE_TYPE = #{useType} and
+		ef.file_status = #{fileStatus} and ef.OBJECT_ID = 
+		<if test="carId != null and carId != ''">
+			(select el.VEHICLE_ID from e_line el where el.car_id = #{carId})
+		</if>
+		<if test="userId != null and userId!= ''">
+			(select VEHICLE_ID from e_user_vehicle where USER_ID = #{userId} ) 
+		</if>
+	</select>
+
+	<!-- 获取运力中心详情的综合评价 -->
+	<select id="selectRouteComment" parameterType="pd" resultType="pd">
+		select EVALUATE_AVG,
+		ROUND((( select count(1) from E_VEHICLE ev where ev.EVALUATE_AVG 
+		<![CDATA[<]]>
+		( select EVALUATE_AVG from E_VEHICLE ev where ev.VEHICLE_ID = 
+		<if test="carId != null and carId != ''">
+			(select VEHICLE_ID from E_LINE where CAR_ID = #{carId})
+		</if>
+		<if test="userId != null and userId!= ''">
+			(select VEHICLE_ID from e_user_vehicle where USER_ID = #{userId}) 
+		</if>
+		))/(select IFNULL((count(1)-1),1)  from E_VEHICLE))*100,2)  EVALUATE_PERCENT
+		from E_VEHICLE ev where ev.VEHICLE_ID = 
+		<if test="carId != null and carId != ''">
+			(select VEHICLE_ID from E_LINE where CAR_ID = #{carId})
+		</if>
+		<if test="userId != null and userId!= ''">
+			(select VEHICLE_ID from e_user_vehicle where USER_ID = #{userId}) 
+		</if>
+	</select>
+
+	<!-- 获取运力中心详情详细评价分数 -->
+	<select id="selectRouteCommentDetail" parameterType="pd"
+		resultType="pd">
+		select PROJECT_CODE,avg(CONMENT) AVG_CONMENT from E_COMMENT_DET t where
+		t.COMMENT_ID in
+		(select COMMENT_ID from E_COMMENT ec where ec.ORDER_ID in
+		(select ORDER_ID from E_ORDER eo where eo.VEHICLE_ID =
+		<if test="carId != null and carId != ''">
+			(select VEHICLE_ID from E_LINE where CAR_ID = #{carId})
+		</if>
+		<if test="userId != null and userId!= ''">
+			(select VEHICLE_ID from e_user_vehicle where USER_ID = #{userId}) 
+		</if>
+		 ) )
+		
+		group by PROJECT_CODE
+	</select>
+
+	<!-- 获取运力中心历史评价总数 -->
+	<select id="selectRouteCommentTotal" parameterType="pd"
+		resultType="pd">
+		select count(1) COMMENT_TOTAL from E_COMMENT ec where ec.ORDER_ID in
+		(select ORDER_ID from E_ORDER eo where eo.VEHICLE_ID =
+		<if test="carId != null and carId != ''">
+				(select VEHICLE_ID from E_LINE where CAR_ID = #{carId} ))
+		</if>
+		<if test="userId != null and userId!= ''">
+				(select VEHICLE_ID from e_user_vehicle where USER_ID = #{userId}))
+		</if>
+	</select>
+
+
+	<!-- 获取运力中心详情详细评价历史 -->
+	<select id="selectRouteCommentHistorylistPage" parameterType="page"
+		resultType="pd">
+
+		select USER_NAME, date_format(COMMENT_TIME,"%Y-%m-%d")
+		COMMENT_TIME, CONTENT ,eo.B_CITY_NAME,eo.E_CITY_NAME,eo.ORDER_ID,ef.URL,ev.EVALUATE_AVG
+		from
+		E_COMMENT ec ,
+		E_VEHICLE ev,
+		E_ORDER eo 
+		
+		left join e_files ef
+		on eo.user_id = ef.OBJECT_ID
+		and ef.USE_DETIAL_TYPE = #{pd.useDetialType}
+		and ef.USE_TYPE = #{pd.useType}
+		and ef.file_status = #{pd.fileStatus}
+		where eo.order_id= ec.order_id
+		and ev.VEHICLE_ID = eo.VEHICLE_ID
+		and eo.VEHICLE_ID =
+		
+		<if test="pd.carId != null and pd.carId != ''">
+		(select VEHICLE_ID from E_LINE where CAR_ID = 	#{pd.carId})
+		</if>
+		<if test="pd.userId != null and pd.userId!= ''">
+		(select VEHICLE_ID from e_user_vehicle where USER_ID = #{pd.userId})
+		</if>
+		order by COMMENT_TIME desc
+		
+
+		
+
+	</select>
+
+	<!-- 获取运力中心详细评价历史车辆图片 -->
+	<select id="selectRouteCommentHistoryPhoto" parameterType="pd"
+		resultType="pd">
+		select ef.URL , #{orderId} ORDER_ID from E_FILES ef where ef.USE_TYPE =
+		#{useType} and ef.USE_DETIAL_TYPE = #{useDetialType} and ef.OBJECT_ID
+		=#{orderId}
+	</select>
+
+
+
+
+	<!-- /*********************************************个人中心***************************************************************/ -->
+
+	<!-- 个人中心初始化 -->
+	<select id="initCenter" parameterType="pd" resultType="pd">
+		select su.NAME,
+		bd.DEALER_NAME ,
+		su.AUDIT_STATUS ,
+		ef.URL ,
+		su.AMOUNT ,
+		#{tel} TEL
+		from SYS_USER su
+		LEFT JOIN BASE_DEALER bd on su.dealer_id = bd.dealer_id
+		LEFT JOIN E_FILES ef on
+		ef.OBJECT_ID = su.user_id
+		and ef.use_type = #{useType}
+		and ef.USE_DETIAL_TYPE
+		=#{useDetialType}
+		and ef.file_status = #{fileStatus}
+		where su.user_id =
+		#{userId}
+
+
+
+
+
+
+
+		<!-- /*********************************************订单相关**************************************************************/ -->
+
+
+
+	</select>
+
+
+
+	<!-- 订单列表 -->
+	<select id="selectOrderListlistPage" parameterType="page"
+		resultType="pd">
+		select
+		eo.ORDER_ID,
+		date_format(eo.BEGIN_DATE,"%Y-%m-%d %H:%i:%S")
+		BEGIN_DATE,
+		date_format(eo.END_DATE,"%Y-%m-%d %H:%i:%S") END_DATE,
+		eo.B_CITY_NAME,
+		eo.B_ADD,
+		eo.E_CITY_NAME,
+		eo.E_ADD,
+		eo.DIRECT_PRICE,
+		eo.PRICE,
+		date_format(eo.ADD_TIME,"%Y-%m-%d %H:%i:%S") ADD_TIME,
+		eo.RE_NAME,
+		eo.RE_PHONE,
+		eo.PAY_NAME,
+		eo.PAY_PHONE,
+		eo.DRIVER_NAME,
+		eo.DRIVER_PHONE,
+		eo.VIN,
+		CONCAT(eam.NAME,eo.MODLE_NAME) MODLE_NAME ,
+		eo.DES,
+		eo.IS_TAX
+		
+		from
+		E_ORDER eo left join E_AUTO_MAT eam
+		on
+		eam.id = ( select PARENT_ID from
+		E_AUTO_MAT t where t.id = eo.MODLE_ID)
+		where
+		ORDER_FLAG =
+		#{pd.orderFlag}
+
+		<if test="pd.bCityName  != null and pd.bCityName != ''">
+			and eo.B_CITY_ID = #{pd.bCityName}
+		</if>
+		<if test="pd.eCityName  != null and pd.eCityName != ''">
+			and eo.E_CITY_ID = #{pd.eCityName}
+		</if>
+		<if test="pd.modelId != null and pd.modelId != ''">
+			and eo.MODLE_id = #{pd.modleId}
+		</if>
+		<if test="pd.autoId != null and pd.autoId != ''">
+			and eam.ID = #{pd.autoId}
+		</if>
+		<if test="pd.statusList != null and pd.statusList != ''">
+			and eo.status in
+			<foreach collection="pd.statusList" item="status" open="("
+				close=")" separator=",">
+				${status}
+
+			</foreach>
+		</if>
+		<if test="pd.vin != null and pd.vin != ''">
+			and eo.vin = #{pd.vin}
+		</if>
+
+		<if test="pd.userId != null and pd.userId != ''">
+			and eo.USER_ID = #{pd.userId}
+		</if>
+
+		<if test="pd.orderId != null and pd.orderId != ''">
+			and eo.ORDER_ID  LIKE CONCAT(CONCAT('%', #{pd.orderId} ),'%')
+		</if>
+		<if test="pd.driverId != null and pd.driverId != ''">
+			and eo.DRIVER_ID = #{pd.driverId}
+		</if>
+
+		<if test="pd.ownerPhone!= null and pd.ownerPhone != ''">
+			and eo.OWNER_PHONE = #{pd.ownerPhone}
+		</if>
+		<if test="pd.driverPhone!= null and pd.driverPhone != ''">
+			and eo.DRIVER_PHONE = #{pd.driverPhone}
+		</if>
+		<!-- 接车时间 -->
+		<if test=" pd.beginDateFrom !=null and pd.beginDateFrom!='' ">
+			and eo.begin_date <![CDATA[>=]]>STR_TO_DATE(#{pd.beginDateFrom},"%Y-%m-%d")
+		</if>
+		<if test=" pd.beginDateTo !=null and pd.beginDateTo !='' ">
+			and eo.begin_date <![CDATA[<=]]>STR_TO_DATE(#{pd.beginDateTo},"%Y-%m-%d")
+		</if>
+		<!-- 到达时间 -->
+		<if test=" pd.endDateFrom !=null and pd.endDateFrom !='' ">
+			and eo.END_DATE <![CDATA[>=]]>STR_TO_DATE(#{pd.endDateFrom},"%Y-%m-%d")
+		</if>
+		<if test=" pd.endDateTo !=null and pd.endDateTo!='' ">
+			and eo.END_DATE <![CDATA[<=]]>STR_TO_DATE(#{pd.endDateTo},"%Y-%m-%d")
+		</if>
+		order by eo.ADD_TIME DESC
+
+
+
+	</select>
+
+	<!-- 订单列表详情 -->
+	<select id="selectOrderListDetail" parameterType="pd" resultType="java.util.HashMap">
+		<!-- select
+			distinct eo.ORDER_ID,
+			date_format(eo.ADD_TIME,"%Y-%m-%d %H:%i:%S") ADD_TIME,
+			date_format(eo.BEGIN_DATE,"%Y-%m-%d %H:%i:%S") BEGIN_DATE,
+			date_format(eo.END_DATE,"%Y-%m-%d %H:%i:%S") END_DATE,
+			eo.B_CITY_NAME,
+			eo.B_ADD,
+			eo.E_CITY_NAME,
+			eo.E_ADD,
+			date_format(eo.COMPLETE_DTAE,"%Y-%m-%d %H:%i:%S") COMPLETE_DTAE,
+			eo.DIRECT_PRICE,
+			eo.PRICE,
+			eo.RE_NAME,
+			eo.RE_PHONE,
+			ef.URL RE_URL,
+			BD.DEALER_NAME RE_DEALER_NAME,
+			eo.PAY_PHONE,
+			eo.PAY_NAME,
+			ef2.URL PAY_URL,
+			eo.COM_NAME,
+			BD2.DEALER_NAME PAY_DEALER_NAME,
+			eo.VIN,
+			CONCAT(eam.NAME,eo.MODLE_NAME) MODLE_NAME ,
+			eo.DES,
+			eo.IS_TAX,
+			eo.STATUS
+		from E_ORDER eo 
+			left join E_CONTACTS ec on eo.RE_ID = ec.user_id
+			left join BASE_DEALER bd on ec.dealer_id = bd.DEALER_ID
+			left join E_CONTACTS ec2 on eo.PAY_ID = ec2.user_id
+			left join BASE_DEALER bd2 on ec2.dealer_id = bd2.DEALER_ID
+			left join E_FILES ef on eo.re_id = ef.OBJECT_ID
+				and ef.USE_DETIAL_TYPE = #{useDetialType}
+				and ef.USE_TYPE = #{useType}
+				and ef.file_status = #{fileStatus}
+			left join E_FILES ef2 on eo.pay_id = ef2.OBJECT_ID
+				and ef2.USE_DETIAL_TYPE = #{useDetialType}
+				and ef2.USE_TYPE = #{useType}
+				and ef2.file_status = #{fileStatus}
+			left join E_AUTO_MAT eam on eam.id = (select PARENT_ID from E_AUTO_MAT t where t.id = eo.MODLE_ID)
+		WHERE order_id = #{orderId} -->
+		
+		<!-- 2017-10-30版本sql改造 ,并添加查询结果集
+			需求：联系人没有头像,添加vtc的业务，费用的业务
+		 -->
+		 select
+			distinct eo.ORDER_ID,
+			date_format(eo.ADD_TIME,"%Y-%m-%d %H:%i:%S") ADD_TIME,
+			date_format(eo.BEGIN_DATE,"%Y-%m-%d %H:%i:%S") BEGIN_DATE,
+			date_format(eo.END_DATE,"%Y-%m-%d %H:%i:%S") END_DATE,
+			eo.B_CITY_NAME,
+			eo.B_ADD,
+			eo.E_CITY_NAME,
+			eo.E_ADD,
+			date_format(eo.COMPLETE_DTAE,"%Y-%m-%d %H:%i:%S") COMPLETE_DTAE,
+			eo.DIRECT_PRICE,
+			eo.PRICE,
+			eo.RE_NAME,
+			eo.RE_PHONE,
+			eo.PAY_PHONE,
+			eo.PAY_NAME,
+			eo.DES,
+			eo.IS_TAX,
+			eo.ISTOOK,
+			eo.ISTAKE,
+			eo.STATUS,
+			eo.VIN,
+			eo.COM_NAME,
+			BD.DEALER_NAME RE_DEALER_NAME,
+			BD2.DEALER_NAME PAY_DEALER_NAME,
+			CONCAT(eam.NAME,eo.MODLE_NAME) MODLE_NAME,
+			IFNULL(C.TOOK_PRICE,0) TOOK_PRICE,
+			IFNULL(C.TAKE_PRICE,0) TAKE_PRICE,
+			IFNULL(C.TAX_PRICE,0) TAX_PRICE,
+			Z.GET_DRIVER_HEAD_URL,
+			Z.GET_DRIVER_NAME,
+			Z.GET_DRIVER_TEL,
+			Z.SEND_DRIVER_HEAD_URL,
+			Z.SEND_DRIVER_NAME,
+			Z.SEND_DRIVER_TEL,
+			bdn.DEALER_NAME TAKE_NAME,
+			bdn.LONGITUDE B_LONGITUDE,
+			bdn.LATITUDE  B_LATITUDE,
+			bdm.DEALER_NAME TOOK_NAME,
+			bdm.LONGITUDE E_LONGITUDE,
+			bdm.LATITUDE E_LATITUDE
+		from E_ORDER eo 
+			inner join E_AUTO_MAT eam on eam.id = (select PARENT_ID from E_AUTO_MAT t where t.id = eo.MODLE_ID)
+			inner join 
+			(
+				select ec.CONTACTS_ID,bd.DEALER_NAME
+				from E_CONTACTS ec 
+				inner JOIN base_dealer bd on ec.DEALER_ID=bd.DEALER_ID		
+			) bd on eo.RE_ID = bd.CONTACTS_ID
+			inner join 
+			(
+				select ec.CONTACTS_ID,bd.DEALER_NAME
+				from E_CONTACTS ec 
+				inner JOIN base_dealer bd on ec.DEALER_ID=bd.DEALER_ID	
+			) bd2 on eo.PAY_ID = bd2.CONTACTS_ID
+			inner JOIN base_dealer bdn on eo.ISTAKE_VTC_ID=bdn.DEALER_ID and bdn.DEALER_TYPE=10151004
+			inner JOIN base_dealer bdm on eo.ISTOOK_VTC_ID=bdm.DEALER_ID and bdm.DEALER_TYPE=10151004
+			left join 
+			(
+				select ORDER_ID,
+					MAX(case when COST_TYPE = 10371001 then AMOUNT else 0 end) TOOK_PRICE,
+					MAX(case when COST_TYPE = 10371002 then AMOUNT else 0 end) TAKE_PRICE,
+					MAX(case when COST_TYPE = 10371004 then AMOUNT else 0 end) TAX_PRICE
+				from e_order_cost where ORDER_ID=#{orderId}
+			) c  on eo.ORDER_ID=c.ORDER_ID
+			LEFT JOIN 
+			(
+				select oo.ORDER_ID,
+				MAX(CASE WHEN oo.TYPE = 10381001 then u.`NAME` else null end) get_driver_name,
+				MAX(CASE WHEN oo.TYPE = 10381001 then u.TEL else null end) get_driver_Tel,
+				MAX(CASE WHEN oo.TYPE = 10381001 then ff.URL  else null end) get_driver_head_url,
+				MAX(CASE WHEN oo.TYPE = 10381002 then u.`NAME` else null end) send_driver_name,
+				MAX(CASE WHEN oo.TYPE = 10381002 then u.TEL else null end) send_driver_Tel,
+				MAX(CASE WHEN oo.TYPE = 10381002 then ff.URL  else null end) send_driver_head_url
+				from e_order_other oo INNER JOIN sys_user u on oo.DRIVER_ID=u.user_id
+				LEFT JOIN e_files ff on u.USER_ID=ff.OBJECT_ID and ff.FILE_STATUS=10021001 and ff.USE_TYPE=10181006
+				where oo.ORDER_ID=#{orderId}
+			) z on eo.ORDER_ID=z.ORDER_ID
+		WHERE eo.order_id = #{orderId}
+	</select>
+
+	<!-- 订单列表详情物流信息 -->
+	<select id="selectOrderContrail" parameterType="pd" resultType="pd">
+		select t.NODE_ID, REMARK,date_format(t.CREATE_DATE,"%Y-%m-%d %H:%i:%S") CREATE_DATE 
+		from E_ORDER_CONTRAIL t where t.order_id = #{orderId}
+	</select>
+
+	<!-- 订单列表详情司机信息 -->
+
+	<select id="selectOrderDriver" parameterType="pd" resultType="pd">
+		select su.NAME ,su.TEL ,ef.URL,bd.DEALER_NAME,su.USER_ID DRIVER_ID
+		from SYS_USER su
+		left join E_FILES ef on su.user_id = ef.OBJECT_ID
+		and ef.USE_DETIAL_TYPE = #{useDetialType}
+		and ef.USE_TYPE = #{useType}
+		and ef.file_status = #{fileStatus}
+		left join BASE_DEALER bd on bd.DEALER_ID = su.DEALER_ID
+		where user_id in
+		(select USER_ID from E_USER_VEHICLE t where t.VEHICLE_ID =
+		(select VEHICLE_ID from e_order where order_id = #{orderId}))
+	</select>
+
+
+	<!-- 订单相关图片查询 -->
+
+	<select id="selectOrderPhoto" parameterType="pd" resultType="pd">
+		select ef.URL , #{orderId} ORDER_ID from E_FILES ef where ef.USE_TYPE
+		= #{useType} and ef.USE_DETIAL_TYPE = #{useDetialType} and
+		ef.OBJECT_ID =#{orderId}
+
+	</select>
+
+	<!-- 获取订单评价 -->
+	<select id="selectOrderComment" parameterType="pd" resultType="pd">
+
+		select ec.USER_NAME, date_format(ec.COMMENT_TIME,"%Y-%m-%d") COMMENT_TIME ,ec.CONTENT,ec.E_CONTENT
+		,eo.B_CITY_NAME,eo.E_CITY_NAME,eo.ORDER_ID ,ef.URL,ec.conment
+		from
+		E_COMMENT ec ,
+		E_VEHICLE ev,
+		E_ORDER eo
+		
+		left join e_files ef
+		on eo.user_id = ef.OBJECT_ID
+		and ef.USE_DETIAL_TYPE = #{useDetialType}
+		and ef.USE_TYPE = #{useType}
+		and ef.file_status = #{fileStatus}
+		where ec.order_id = eo.order_id
+		and ev.VEHICLE_ID = eo.VEHICLE_ID
+		and ec.order_id = #{orderId}
+	</select>
+	
+	
+		<!-- 获取订单详细评价分数 -->
+	<select id="selectOrderCommentDetail" parameterType="pd"
+		resultType="pd">
+		select PROJECT_CODE,avg(CONMENT) AVG_CONMENT from E_COMMENT_DET t where
+		t.COMMENT_ID =
+		(select COMMENT_ID from E_COMMENT ec where ec.ORDER_ID = #{orderId}
+		 )
+		group by PROJECT_CODE
+	</select>
+	
+
+	<!-- 获取订单评价图片 -->
+	<select id="selectOrderCommentPhoto" parameterType="pd"
+		resultType="pd">
+		select ef.URL , #{orderId} ORDER_ID from E_FILES ef where ef.USE_TYPE =
+		#{useType} and ef.USE_DETIAL_TYPE = #{useDetialType} and ef.OBJECT_ID
+		=#{orderId}
+	</select>
+	<!--获取订单位置信息  -->
+	
+	<select id="selectOrderLocation" parameterType="pd" resultType="pd" >
+	select 
+		LOCATION_ID,
+		ORDER_ID,
+		PROJECT_NAME,
+		PROJECT_CODE,
+	    date_format(CONMENT,"%Y-%m-%d %H:%i:%S") CONMENT,
+		LOGITUDE,
+		LATITUDE,
+		ADDRESS,
+		UP_TYPE,
+		TYPE
+		from e_location el
+		where el.order_id  = #{orderId}
+		order by  CONMENT desc	limit 1
+	</select>
+	
+
+
+
+	<!-- /************************************************ 车主撤单 收车 确认到达 交车 车主确认交车 
+		评价****************************************************************************/ -->
+
+
+
+	<!-- 保存文件 -->
+	<update id="saveFile" parameterType="pd">
+
+		update E_FILES set
+		USE_TYPE = #{useType},
+		USE_DETIAL_TYPE = #{useDetialType},
+		OBJECT_ID = #{orderId}
+		where FILE_ID = #{fileId}
+	</update>
+	
+	<!-- 存入订单轨迹 -->
+	<insert id="saveOrderContrail" parameterType="pd">
+		insert into E_ORDER_CONTRAIL(
+		COST_ID,
+		ORDER_ID,
+		PROJECT_ID,
+		PROJECT_NAME,
+		CONMENT,
+		NODE_ID,
+		NODE_NAME,
+		CREATE_BY,
+		CREATE_DATE,
+		REMARK
+		)values (
+		#{costId},
+		#{orderId},
+		#{userId},
+		(select name from sys_user t where user_id = #{userId}),
+		now(),
+		#{nodeId},
+		(select data_name from sys_data where data_key = #{nodeId}),
+		#{userId},
+		now(),
+		#{remark}
+		)
+	</insert>
+	<!-- 存入消息 -->
+	<insert id="saveMsg" parameterType="pd">
+		insert into MA_MSG(
+		MSG_ID,
+		MSG_TYPE,
+		MSG_TITLE,
+		MSG_CONTENT,
+		SEND_TIME,
+		END_TIME,
+		SEND_USER,
+		RANGE_FLAG,
+		<if test="msgUserType != null and msgUserType != '' ">
+			USER_TYPE,
+		</if>
+		SEND_NAME
+		)values(
+		#{msgId},
+		#{msgType},
+		#{msgTitle},
+		#{msgContent},
+		now(),
+		now(),
+		#{sendUserId},
+		#{rangFlag},
+		<if test="msgUserType != null and msgUserType != '' ">
+			#{msgUserType},
+		</if>
+		(select su.name from sys_user su where su.USER_ID= #{sendUserId} )
+		)
+	</insert>
+	<!-- 存入消息接收记录 -->
+	<insert id="saveMsgReceive" parameterType="pd">
+		insert into MA_MSG_RECEIVE(
+		MSG_RECEIVE_ID,
+		MSG_ID,
+		MSG_CONTENT,
+		USER_ID,
+		USER_NAME,
+		RECEIVE_TIME
+		)values(
+		#{msgReceiveId},
+		#{msgId},
+		#{msgContent},
+		(select eo.user_id from e_order eo where eo.order_id = #{orderId}),
+		(select su.name from sys_user su where su.USER_ID = (select eo.user_id from
+		e_order eo where eo.order_id = #{orderId}) ),
+		now()
+		)
+	</insert>
+
+	<!-- 插入位置信息 -->
+	<insert id="saveLocation" parameterType="pd">
+		insert into E_LOCATION(
+
+		LOCATION_ID,
+		ORDER_ID,
+		PROJECT_NAME,
+		PROJECT_CODE,
+		CONMENT,
+		LOGITUDE,
+		LATITUDE,
+		ADDRESS,
+		TYPE,
+	    UP_TYPE
+
+		)VALUES(
+		#{locationId},
+		#{orderId},
+		(select su.user_name from sys_user su where
+		su.USER_ID = (select eo.driver_id from e_order eo where eo.order_id =
+		#{orderId}) ),
+		(select su.name from sys_user su where su.USER_ID =
+		(select eo.driver_id from e_order eo where eo.order_id = #{orderId})
+		),
+		now(),
+		#{logitude},
+		#{latitude},
+		#{address},
+		#{type},
+		#{upType}
+
+		)
+	</insert>
+
+
+	<!-- 货主撤单 -->
+	<update id="cancelOrder" parameterType="pd">
+		update e_order set
+		status = #{status},
+		REVOKE_USER_ID = #{userId},
+		REVOKE_REMARK =#{remark},
+		REVOKE_DATE = now()
+		where
+		ORDER_ID = #{orderId}
+	</update>
+
+
+
+
+	<!-- 司机上传图片收车 -->
+
+	<update id="getOrder" parameterType="pd">
+
+		update e_order set
+		status =
+		#{status},
+		SEND_TIME = now()
+		where
+		ORDER_ID = #{orderId}
+	</update>
+
+
+	<!-- 司机确认到达 -->
+
+	<update id="arriveOrder" parameterType="pd">
+		update e_order set
+			status= #{status},
+			ARRIVE_TIME = now()
+		where
+			ORDER_ID = #{orderId}
+	</update>
+
+	<!-- 司机上传图片交车 -->
+
+	<update id="submitOrder" parameterType="pd">
+
+		update e_order set
+		status
+		= #{status},
+		HAND_TIME = now()
+		where
+		ORDER_ID = #{orderId}
+	</update>
+
+
+
+
+
+	<!--货主确认交车 -->
+
+	<update id="confirmOrder" parameterType="pd">
+
+		update e_order set
+		status = #{status},
+		GET_TIME = now()
+		where
+		ORDER_ID = #{orderId}
+	</update>
+
+	<!-- 钱包改变记录 -->
+	<insert id="saveAmountUser" parameterType="pd" >
+	insert into e_amount_record(
+	RECORD_ID,
+	TYPE,
+	AMOUNT,
+	USER_ID,
+	USER_NAME,
+	BUSINESS_TYPE,
+	BUSINESS_ID,
+	CREATE_BY,
+	CREATE_DATE,
+	ADD_DATE
+	)values(
+	#{recordId},
+	#{type},
+	(select -PRICE from e_order eo where eo.order_id = #{orderId}),
+	#{userId},
+	(select name from sys_user su where su.user_id = #{userId} ),
+	#{businessType},
+	#{orderId},
+	#{userId},
+	now(),
+	now()
+	)
+
+	</insert>
+	
+		<insert id="saveAmountDriver" parameterType="pd" >
+	insert into e_amount_record(
+	RECORD_ID,
+	TYPE,
+	AMOUNT,
+	USER_ID,
+	USER_NAME,
+	BUSINESS_TYPE,
+	BUSINESS_ID,
+	CREATE_BY,
+	CREATE_DATE,
+	ADD_DATE
+	)values(
+	#{recordId},
+	#{type},
+	(select PRICE from e_order eo where eo.order_id = #{orderId}),
+	(select driver_id  from e_order where order_id =  #{orderId}),
+	(select name from sys_user su where su.user_id = (select driver_id  from e_order where order_id =  #{orderId}) ),
+	#{businessType},
+	#{orderId},
+	(select driver_id  from e_order where order_id =  #{orderId}),
+	now(),
+	now()
+	)
+
+	</insert>
+	
+
+	<update id="editAmountUser" parameterType="pd">
+	update sys_user set 
+					amount = (select sum(amount) from e_amount_record ear where ear.user_id = #{userId})
+	where user_id = #{userId}
+	</update>
+	
+		<update id="editAmountDriver" parameterType="pd">
+	update sys_user set 
+					amount = (select sum(amount) from e_amount_record ear where ear.user_id = (select driver_id  from e_order where order_id =  #{orderId}) )
+	where user_id =(select driver_id  from e_order where order_id =  #{orderId})
+	</update>
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+	<!-- 添加线评价 -->
+	<insert id="addComment" parameterType="pd">
+		insert into
+		E_COMMENT(
+		COMMENT_ID,
+		ORDER_ID,
+		USER_ID,
+		USER_NAME,
+		COMMENT_TIME,
+		CONTENT,
+		CONMENT,
+		E_CONTENT
+		) values (
+		#{commentId},
+		#{orderId},
+		#{userId},
+		(select name from sys_user su where su.user_id = #{userId}),
+		#{commentTime},
+		#{content},
+		#{conment},
+		#{eContent}
+		)
+	</insert>
+
+
+
+
+	<insert id="addCommentDetail" parameterType="pd">
+		insert into
+		E_COMMENT_DET(
+		DET_ID,
+		COMMENT_ID,
+		PROJECT_NAME,
+		PROJECT_CODE,
+		CONMENT
+
+		) values (
+		#{detId},
+		#{commentId},
+		#{projectName},
+		#{projectCode},
+		#{conment}
+		)
+	</insert>
+
+	<!--评价 -->
+
+	<update id="commentOrder" parameterType="pd">
+
+		update e_order set
+		status = #{status}
+
+		where
+		ORDER_ID = #{orderId}
+	</update>
+
+	<!--评价存入车辆信息表 -->
+
+	<update id="commentVehicle" parameterType="pd">
+
+	
+	update e_vehicle set
+	EVALUATE_AVG = 
+	(select sum(ec.conment)+1 from e_comment ec where ec.order_id in (select order_id from e_order eo where eo.vehicle_id =  ( select vehicle_id from e_order where order_id= #{orderId})))
+    /(select count(1)+1        from e_comment ec where ec.order_id in (select order_id from e_order eo where eo.vehicle_id =  ( select vehicle_id from e_order where order_id = #{orderId})))
+     where
+	vehicle_id = ( select vehicle_id from e_order where order_id= #{orderId})
+	
+	
+
+	</update>
+
+
+
+
+
+
+	<!-- 消息 *******************************金额 -->
+
+	<!-- 查询消息列表 -->
+	<select id="selectMsglistPage" parameterType="page" resultType="pd">
+		select
+				mm.MSG_TYPE,
+				mm.MSG_TITLE,
+				mm.MSG_CONTENT,
+				mm.MSG_FILE,
+				date_format(mm.SEND_TIME,"%Y-%m-%d %H:%i:%S") SEND_TIME,
+				date_format(mm.END_TIME,"%Y-%m-%d %H:%i:%S") END_TIME,
+				mm.SEND_NAME,
+				mm.DEL_FLAG,
+				mm.DEL_TIME
+				from MA_MSG mm where mm.RANGE_FLAG=10011001
+		union all
+		select
+				mm.MSG_TYPE,
+				mm.MSG_TITLE,
+				mr.MSG_CONTENT,
+				mm.MSG_FILE,
+				date_format(mm.SEND_TIME,"%Y-%m-%d %H:%i:%S") SEND_TIME,
+				date_format(mm.END_TIME,"%Y-%m-%d %H:%i:%S") END_TIME,
+				mm.SEND_NAME,
+				mm.DEL_FLAG,
+				mm.DEL_TIME
+				from MA_MSG mm  inner join ma_msg_receive mr on mm.MSG_ID=mr.MSG_ID
+				where mm.RANGE_FLAG=10011002
+				and mr.USER_ID=#{pd.userId}
+		order by SEND_TIME DESC
+	</select>
+
+	<!-- 查询金额明细 -->
+	<select id="selectMoneylistPage" parameterType="page" resultType="pd">
+		select
+		t.AMOUNT,
+		t.USER_ID,
+		t.BUSINESS_TYPE TYPE,
+		t.BUSINESS_ID,
+		date_format(t.ADD_DATE,"%Y-%m-%d %H:%i:%S") ADD_DATE
+		from E_AMOUNT_RECORD t
+		where t.user_id = #{pd.userId}
+		order by t.ADD_DATE desc
+	</select>
+	<!-- 查询用户总金额 -->
+	<select id="selectMoneyTotal" parameterType="pd" resultType="pd">
+		select AMOUNT from sys_user t where t.user_id = #{userId}
+	</select>
+	
+	<insert id="feedBackSave" parameterType="pd">
+		insert into E_FEEDBACK 
+		(FEENDBACK_ID,FEEDBACK_TYPE,FEEDBACK_CONTENT,FEEDBACK_USER,FEEDBACK_LINK,CREATE_BY,CREATE_DATE)
+		VALUES
+		(#{feedbackId},#{feedbackType},#{feedbackContent},#{feedbackUser},#{feedbackLink},#{feedbackUser},now())	
+	</insert>
+	
+	<update id="updateFeedBackPicObectId" parameterType="pd">
+		update e_files set OBJECT_ID = #{feedbackId} where FILE_ID=#{picId}
+	</update>
+	
+	<select id="getAdvertList" resultType="java.util.HashMap">
+		select d.NEW_ID,f.URL,d.NEW_DETAIL_TYPE,d.NEW_LINK
+		from e_advert d inner join e_files f on d.NEW_ID=f.OBJECT_ID and f.USE_TYPE=10181010
+		where d.NEW_TYPE=10351001 and d.`STATUS`=10021001
+		ORDER BY CREATE_DATE DESC
+		LIMIT 0,5	
+	</select>
+	
+	<select id="getAdvertDetail" parameterType="pd" resultType="java.util.HashMap">
+		SELECT
+			d.NEW_ID,
+			d.NEW_DETAIL_TYPE,
+			d.CONTENT,
+			d.NEW_TITLE,
+			d.NEW_LINK,
+			d.CREATE_BY,
+			DATE_FORMAT(d.CREATE_DATE, '%Y-%m-%d') CREATE_DATE
+		FROM e_advert d
+		WHERE d.`STATUS` = 10021001
+		and d.NEW_ID=#{advertId}	
+	</select>
+	
+	<update id="readMsgByMsgIdSmall" parameterType="pd">
+		update ma_msg_receive set IS_READ=1,READ_TIME=now() where MSG_RECEIVE_ID=#{msgId}
+	</update>
+	
+	<insert id="insertMsgByMsgIdSmall" parameterType="pd">
+		insert into ma_msg_receive
+		(MSG_RECEIVE_ID,MSG_ID,USER_ID,USER_NAME,RECEIVE_TIME,READ_TIME,IS_READ)
+		VALUES(getPrimary(),#{msgId},#{userId},#{userId},now(),now(),1)	
+	</insert>
+	
+	<select id="getMsgList"  parameterType="pd" resultType="java.util.HashMap">
+		select MSG_RECEIVE_ID MSG_ID,10011002 RANGE_FLAG from ma_msg_receive where IS_READ=0 and USER_ID=#{userId}
+			union all
+			select m.MSG_ID,m.RANGE_FLAG from ma_msg m where m.RANGE_FLAG=10011001 and 
+			not EXISTS (
+				select MSG_ID from ma_msg_receive mm where mm.msg_id=m.MSG_ID and mm.user_id=#{userId}
+			)
+	</select>
+
+</mapper>
